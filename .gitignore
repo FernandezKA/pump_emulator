@@ -1,6 +1,9 @@
 
+*.scvd
 *.map
+*.iex
 *.d
+Objects/freertos_evr.o
 *.o
 *.axf
 *.htm
