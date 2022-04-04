@@ -1,0 +1,12 @@
+
+*.map
+*.d
+*.o
+*.axf
+*.htm
+*.lnp
+*.sct
+*.dep
+*.ferna
+*.uvoptx
+*.uvprojx
