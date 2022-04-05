@@ -6,10 +6,12 @@
 
 static inline void SysInit(void);
 void led_activity(void *pvParameters);
+void send_status(void *pvArguments);
 
 int main(){
 	SysInit();
-	xTaskCreate( led_activity, "Check", configMINIMAL_STACK_SIZE, NULL, 1, NULL );
+	xTaskCreate(led_activity, "led_activity", configMINIMAL_STACK_SIZE, NULL, 1, NULL );
+	xTaskCreate(send_status, "Get_status", configMINIMAL_STACK_SIZE, NULL, 1, NULL);
 	vTaskStartScheduler();
 	for(;;){}
 		return 0;
@@ -18,10 +20,15 @@ int main(){
 
 void led_activity(void *pvParameters){
 		for(;;){
-			vTaskDelay(300);
+			vTaskDelay(pdMS_TO_TICKS(1000));
 			GPIO_OCTL(GPIOC)^=(1<<13);
-			 __NOP();
 		}
+}
+
+void send_status(void *pvArguments){
+	for(;;){
+	 vTaskDelay(1000);
+	}
 }
 
  static inline void SysInit(void){
