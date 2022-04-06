@@ -20,6 +20,7 @@ extern TaskHandle_t main_task_handle;
 
 //queues for tasks
 extern QueueHandle_t pwm_value;
+extern QueueHandle_t cap_signal;
 
 
 

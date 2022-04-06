@@ -18,8 +18,20 @@ void get_activity(void *pvParameters)
 }
 void capture_signal(void *pvParameters)
 {
+	uint8_t cap_value = 0;
+	_Bool last_state, curr_state = 0x00U;
     for (;;)
     {
+			last_state = curr_state;
+			curr_state = ((GPIO_ISTAT(GPIOB) & (1<<12)) == (1<<12));
+			if(curr_state != last_state){
+				xQueueSendToBack(cap_signal, (void*) &cap_value, 0);
+				cap_value = 0x00U;
+			}
+			else{
+				++cap_value;
+			}
+			vTaskDelay(pdMS_TO_TICKS(1));
     }
 }
 
