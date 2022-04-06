@@ -36,6 +36,8 @@
 #define RTE_DEVICE_STDPERIPHERALS_RCU
 /* GigaDevice::Device:GD32F10x_StdPeripherals:RTC:2.0.1 */
 #define RTE_DEVICE_STDPERIPHERALS_RTC
+/* GigaDevice::Device:GD32F10x_StdPeripherals:USART:2.0.1 */
+#define RTE_DEVICE_STDPERIPHERALS_USART
 
 
 #endif /* RTE_COMPONENTS_H */
