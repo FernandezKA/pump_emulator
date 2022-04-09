@@ -1,7 +1,7 @@
 #include "user_task.h"
 
 
-TaskHandle_t ad8400_task_ghandle = NULL;
+TaskHandle_t ad8400_task_handle = NULL;
 TaskHandle_t main_task_handle = NULL;
 TaskHandle_t sample_task_handle = NULL;
 
@@ -14,9 +14,17 @@ void ad8400_task(void *pvParameters)
 }
 void main_task(void *pvParameters)
 {
+	struct pulse timeArray[0x0AU];
+	uint8_t indexArray = 0x00U;
+	
 	for (;;)
 	{
-		
+		 if(pdPASS == xQueueReceive(cap_signal, &timeArray[indexArray], 0)){
+				++indexArray;
+			 if(indexArray == 0x06U){      //6th samples received
+				 //Check for valid 
+			 }
+		 }
 	}
 }
 
