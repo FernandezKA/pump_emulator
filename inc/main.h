@@ -19,4 +19,12 @@ void ERROR_HANDLER(void);
 #define LED_PORT GPIOC
 #define LED_PIN (1<<13)
 
+#define RESPONSE_PORT GPIOB
+#define RESPONSE_PIN  (1<<11)
+
+void _clk_init(void);
+void _gpio_init(void);
+void _usart_init(void);
+void _tim1_init(void);
+
 #endif
