@@ -2,16 +2,16 @@
 
 QueueHandle_t pwm_value;
 QueueHandle_t cap_signal;
+
 static inline void SysInit(void);
 
 int main()
 {
 	SysInit();
 	pwm_value= xQueueCreate(1, sizeof(uint8_t));
-	cap_signal = xQueueCreate(6, sizeof(uint8_t));
-	if (pdPASS != xTaskCreate(main_task, "main_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &main_task_handle)) ERROR_HANDLER();
-	if(pdPASS != xTaskCreate(get_activity, "get_activity", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1,&get_activity_handle)) ERROR_HANDLER();
-	if(pdPASS != xTaskCreate(capture_signal, "capture_signal", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1,&capture_signal_handle)) ERROR_HANDLER();
+	cap_signal = xQueueCreate(10, sizeof(struct pulse));
+	if(pdPASS != xTaskCreate(main_task, "main_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &main_task_handle)) ERROR_HANDLER();
+	if(pdPASS != xTaskCreate(sample_task, "sample_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY+1, &sample_task_handle)) ERROR_HANDLER(); 
 	vTaskStartScheduler();
 	for (;;)
 	{
