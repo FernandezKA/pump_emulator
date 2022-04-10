@@ -4,6 +4,7 @@
 
 #include "gd32f10x.h"
 #include "gd32f10x_usart.h"
+#include "gd32f10x_timer.h"
 
 #include "FreeRTOS.h"
 #include "task.h"

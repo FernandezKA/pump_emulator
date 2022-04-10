@@ -4,6 +4,7 @@ void _clk_init(void)
 {
     RCU_APB2EN |= RCU_APB2EN_PAEN | RCU_APB2EN_PBEN | RCU_APB2EN_PCEN;
     RCU_APB2EN |= RCU_APB2EN_USART0EN;
+		RCU_APB2EN |= RCU_APB1EN_TIMER1EN;
 }
 
 void _gpio_init(void)
@@ -29,4 +30,11 @@ void _usart_init(void)
 
 void _tim1_init(void)
 {
+		timer_deinit(TIMER1);
+		timer_parameter_struct tim1; 
+		tim1.prescaler = 10800;
+		tim1.alignedmode = TIMER_COUNTER_EDGE;
+		tim1.counterdirection = TIMER_COUNTER_UP;
+		tim1.period = 1000;
+		timer_init(TIMER1, &tim1);
 }

@@ -16,10 +16,10 @@ void main_task(void *pvParameters)
 {
 	struct pulse timeArray[0x0AU];
 	uint8_t indexArray = 0x00U;
-
+	enum work_mode _mode;
 	for (;;)
 	{
-		if (pdPASS == xQueueReceive(cap_signal, &timeArray[indexArray], 0))
+		if (pdPASS == xQueueReceive(cap_signal, &timeArray[indexArray], 0))//Check capture signal 
 		{
 			++indexArray;
 			if (indexArray == 0x06U)
@@ -28,8 +28,23 @@ void main_task(void *pvParameters)
 				xTaskCreate(response_task, "response_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &response_task_handle);
 
 			}
-
 		}
+
+		switch(_mode){
+			case pwm_input:
+
+			break;
+
+			case start_input:
+
+			break;
+
+			case stop_input:
+
+			break;
+		}
+		
+		
 	}
 }
 
@@ -63,8 +78,6 @@ void sample_task(void *pvParameters)
 			xQueueSendToBack(cap_signal, &((struct pulse){.state = last_state, .time = time_val}), 0);
 			time_val = 0x00U;
 		}
-		// Signal generation
-
 		// LED activity
 		if ((sysTick % 500) == 0U)
 		{
