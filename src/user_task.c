@@ -18,6 +18,10 @@ void main_task(void *pvParameters)
 	static struct pulse _tmp_pulse;
 	static enum work_mode _mode;
 	static uint8_t _valid_index = 0x00U;
+	static uint16_t _pwm_hight_val = 0x00U;
+	static uint16_t _pwm_low_val = 0x00U;
+	static double pwm_fill = 0x00U;
+	static uint8_t _pwm_index = 0x00U;
 	const static uint16_t valid_high = 160;
 	const static uint16_t valid_low = 140;
 	const static uint16_t stop_seq = 800;
@@ -32,7 +36,23 @@ void main_task(void *pvParameters)
 			usart_data_transmit(USART0, (_tmp_pulse.time&0xFFU));
 			if (_tmp_pulse.time < 100)
 			{
+				if(_pwm_index < 10){
+					 _mode = undef;
+					if(_tmp_pulse.state){
+						 _pwm_hight_val+=_tmp_pulse.time;
+					}
+					else{
+						 _pwm_low_val+=_tmp_pulse.time;
+					}
+					++_pwm_index;
+				}
+				else{
 				_mode = pwm_input;
+					pwm_fill = _pwm_hight_val / (_pwm_hight_val + _pwm_low_val);
+					_pwm_index = 0x00U;
+					_pwm_hight_val = 0x00U;
+					_pwm_hight_val = 0x00U;
+				}
 			}
 			else if (_tmp_pulse.time > 100 && _tmp_pulse.time < 500)
 			{
