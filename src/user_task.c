@@ -4,6 +4,7 @@ TaskHandle_t ad8400_task_handle = NULL;
 TaskHandle_t main_task_handle = NULL;
 TaskHandle_t sample_task_handle = NULL;
 TaskHandle_t response_task_handle = NULL;
+TaskHandle_t send_info_task_handle = NULL;
 
 void ad8400_task(void *pvParameters)
 {
@@ -59,6 +60,7 @@ void main_task(void *pvParameters)
 				if (_valid_index > 0x05U)
 				{
 					_mode = start_input;
+					_valid_index = 0x00U;
 				}
 				else
 				{
@@ -85,13 +87,15 @@ void main_task(void *pvParameters)
 			break;
 
 		case start_input:
-			xTaskCreate(response_task, "responce_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &response_task_handle);
+			vTaskResume(response_task_handle);
+			_valid_index = 0x00U;
+			_mode = undef;
 			break;
 
 		case stop_input:
 			if (eDeleted != eTaskGetState(response_task_handle))
 			{
-				vTaskDelete(response_task_handle);
+				vTaskSuspend(response_task_handle);
 			}
 			_mode = undef;
 			break;
@@ -162,7 +166,14 @@ void response_task(void *pvParameters)
 		}
 		else
 		{
-			vTaskDelete(response_task_handle);
+			response_index = 0x00U;
+			vTaskSuspend(response_task_handle);
 		}
 	}
+}
+
+void send_info_task(void *pvParameters){
+	 for(;;){
+		 vTaskDelay(100);
+	 }
 }

@@ -51,7 +51,7 @@ extern uint32_t SystemCoreClock;
 #define configCPU_CLOCK_HZ                    (SystemCoreClock)
 #define configTICK_RATE_HZ                    ((TickType_t)1000)
 #define configTOTAL_HEAP_SIZE                 ((size_t)4096)
-#define configMINIMAL_STACK_SIZE              ((uint16_t)256)
+#define configMINIMAL_STACK_SIZE              ((uint16_t)128)
 #define configSUPPORT_DYNAMIC_ALLOCATION      1
 #define configSUPPORT_STATIC_ALLOCATION       0
  
@@ -96,7 +96,7 @@ extern uint32_t SystemCoreClock;
 #define configENABLE_MPU                      0
 #define configENABLE_FPU                      1
 #define configENABLE_TRUSTZONE                1
-#define configMINIMAL_SECURE_STACK_SIZE       ((uint32_t)1024)
+#define configMINIMAL_SECURE_STACK_SIZE       ((uint32_t)512)
 #define configRUN_FREERTOS_SECURE_ONLY        0
  
 /* Cortex-M specific definitions. */
