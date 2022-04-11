@@ -14,37 +14,87 @@ void ad8400_task(void *pvParameters)
 
 void main_task(void *pvParameters)
 {
-	struct pulse timeArray[0x0AU];
-	uint8_t indexArray = 0x00U;
-	enum work_mode _mode;
+	static struct pulse _tmp_pulse;
+	static enum work_mode _mode;
+	static uint8_t _valid_index = 0x00U;
+	const static uint16_t valid_high = 160;
+	const static uint16_t valid_low = 140;
+	const static uint16_t stop_seq = 800;
+	const static uint16_t max_dev_high = valid_high / 10; // 10%
+	const static uint16_t max_dev_low = valid_low / 10;	  // 10%
+	const static uint16_t max_dev_stop = stop_seq / 10;	  // 10%
 	for (;;)
 	{
-		if (pdPASS == xQueueReceive(cap_signal, &timeArray[indexArray], 0))//Check capture signal 
+		if (pdPASS == xQueueReceive(cap_signal, &_tmp_pulse, 0)) // Check capture signal
 		{
-			++indexArray;
-			if (indexArray == 0x06U)
-			{ // 6th samples received
-			  // Check for valid
-				xTaskCreate(response_task, "response_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &response_task_handle);
+			if (_tmp_pulse.time < 100)
+			{
+				_mode = pwm_input;
+			}
+			else if (_tmp_pulse.time > 100 && _tmp_pulse.time < 500)
+			{
+				if (_tmp_pulse.state)
+				{ // High state
+					if (abs(_tmp_pulse.time - valid_high) < max_dev_high)
+					{
+						++_valid_index;
+					}
+					else
+					{
+						_valid_index = 0x00U;
+					}
+				}
+				else
+				{ // Low state
+					if (abs(_tmp_pulse.time - valid_low) < max_dev_low)
+					{
+						++_valid_index;
+					}
+					else
+					{
+						_valid_index = 0x00U;
+					}
+				}
 
+				if (_valid_index > 0x05U)
+				{
+					_mode = start_input;
+				}
+				else
+				{
+					_mode = undef;
+				}
+			}
+			else
+			{
+				if ((abs(_tmp_pulse.time - stop_seq) < max_dev_stop) && !_tmp_pulse.state)
+				{
+					_mode = stop_input;
+				}
+				else
+				{
+					_mode = undef;
+				}
 			}
 		}
-
+		
 		switch(_mode){
 			case pwm_input:
-
+				
 			break;
-
+			
 			case start_input:
-
+				
 			break;
-
+			
 			case stop_input:
-
+				
+			break;
+			
+			case undef:
+				
 			break;
 		}
-		
-		
 	}
 }
 
