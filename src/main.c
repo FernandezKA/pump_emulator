@@ -21,7 +21,7 @@ int main()
 		ERROR_HANDLER();
 	if(pdPASS != xTaskCreate(send_info_task, "send_info_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &send_info_task_handle))
 		ERROR_HANDLER();
-		vTaskSuspend(response_task_handle);
+	vTaskSuspend(response_task_handle);
 	vTaskStartScheduler();
 	for (;;)
 	{

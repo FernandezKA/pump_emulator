@@ -23,11 +23,13 @@ void main_task(void *pvParameters)
 	const static uint16_t stop_seq = 800;
 	const static uint16_t max_dev_high = valid_high / 10; // 10%
 	const static uint16_t max_dev_low = valid_low / 10;	  // 10%
-	const static uint16_t max_dev_stop = stop_seq / 10;	  // 10%
+	const static uint16_t max_dev_stop = stop_seq * 0.3;	  // 10%
 	for (;;)
 	{
 		if (pdPASS == xQueueReceive(cap_signal, &_tmp_pulse, 0)) // Check capture signal
 		{
+			usart_data_transmit(USART0, ((_tmp_pulse.time>>8)&0xFFU));
+			usart_data_transmit(USART0, (_tmp_pulse.time&0xFFU));
 			if (_tmp_pulse.time < 100)
 			{
 				_mode = pwm_input;
@@ -69,7 +71,7 @@ void main_task(void *pvParameters)
 			}
 			else
 			{
-				if ((abs(_tmp_pulse.time - stop_seq) < max_dev_stop) && !_tmp_pulse.state)
+				if ((abs(_tmp_pulse.time - stop_seq) < max_dev_stop))
 				{
 					_mode = stop_input;
 				}
@@ -93,10 +95,7 @@ void main_task(void *pvParameters)
 			break;
 
 		case stop_input:
-			if (eDeleted != eTaskGetState(response_task_handle))
-			{
-				vTaskSuspend(response_task_handle);
-			}
+			vTaskSuspend(response_task_handle);
 			_mode = undef;
 			break;
 
@@ -167,13 +166,16 @@ void response_task(void *pvParameters)
 		else
 		{
 			response_index = 0x00U;
-			vTaskSuspend(response_task_handle);
+			//vTaskSuspend(response_task_handle);
 		}
 	}
 }
 
-void send_info_task(void *pvParameters){
-	 for(;;){
-		 vTaskDelay(100);
-	 }
+void send_info_task(void *pvParameters)
+{
+	
+	for (;;)
+	{
+		vTaskDelay(100);
+	}
 }
