@@ -57,7 +57,7 @@ void main_task(void *pvParameters)
 					}
 				}
 
-				if (_valid_index > 0x05U)
+				if (_valid_index > 0x3U)
 				{
 					_mode = start_input;
 					_valid_index = 0x00U;
@@ -148,7 +148,7 @@ void sample_task(void *pvParameters)
 
 void response_task(void *pvParameters)
 {
-	const struct pulse response[] = {{.state = false, .time = 140}, {.state = true, .time = 160}, {.state = false, .time = 140}, {.state = true, .time = 160}, {.state = false, .time = 140}, {.state = true, .time = 160}};
+	const struct pulse response[] = {{.state = true, .time = 180}, {.state = false, .time = 100}, {.state = true, .time = 100}, {.state = false, .time = 10}, {.state = true, .time = 190}, {.state = false, .time = 100}};
 	uint8_t response_index = 0x00U;
 	for (;;)
 	{
