@@ -77,22 +77,27 @@ void main_task(void *pvParameters)
 				}
 			}
 		}
-		
-		switch(_mode){
-			case pwm_input:
-				
+
+		switch (_mode)
+		{
+		case pwm_input:
+			// TODO: Add pwm generate
 			break;
-			
-			case start_input:
-				
+
+		case start_input:
+			xTaskCreate(response_task, "responce_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &response_task_handle);
 			break;
-			
-			case stop_input:
-				
+
+		case stop_input:
+			if (eDeleted != eTaskGetState(response_task_handle))
+			{
+				vTaskDelete(response_task_handle);
+			}
+			_mode = undef;
 			break;
-			
-			case undef:
-				
+
+		case undef:
+
 			break;
 		}
 	}
@@ -125,7 +130,7 @@ void sample_task(void *pvParameters)
 		}
 		else
 		{
-			xQueueSendToBack(cap_signal, &((struct pulse){.state = last_state, .time = time_val}), 0);
+			xQueueSendToBack(cap_signal, &((struct pulse){.state = curr_state, .time = time_val}), 0);
 			time_val = 0x00U;
 		}
 		// LED activity
