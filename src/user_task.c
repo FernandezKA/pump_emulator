@@ -27,27 +27,31 @@ void main_task(void *pvParameters)
 	const static uint16_t stop_seq = 800;
 	const static uint16_t max_dev_high = valid_high / 10; // 10%
 	const static uint16_t max_dev_low = valid_low / 10;	  // 10%
-	const static uint16_t max_dev_stop = stop_seq * 0.3;	  // 10%
+	const static uint16_t max_dev_stop = stop_seq * 0.3;  // 10%
 	for (;;)
 	{
 		if (pdPASS == xQueueReceive(cap_signal, &_tmp_pulse, 0)) // Check capture signal
 		{
-			usart_data_transmit(USART0, ((_tmp_pulse.time>>8)&0xFFU));
-			usart_data_transmit(USART0, (_tmp_pulse.time&0xFFU));
+			usart_data_transmit(USART0, ((_tmp_pulse.time >> 8) & 0xFFU));
+			usart_data_transmit(USART0, (_tmp_pulse.time & 0xFFU));
 			if (_tmp_pulse.time < 100)
 			{
-				if(_pwm_index < 10){
-					 _mode = undef;
-					if(_tmp_pulse.state){
-						 _pwm_hight_val+=_tmp_pulse.time;
+				if (_pwm_index < 10)
+				{
+					_mode = undef;
+					if (_tmp_pulse.state)
+					{
+						_pwm_hight_val += _tmp_pulse.time;
 					}
-					else{
-						 _pwm_low_val+=_tmp_pulse.time;
+					else
+					{
+						_pwm_low_val += _tmp_pulse.time;
 					}
 					++_pwm_index;
 				}
-				else{
-				_mode = pwm_input;
+				else
+				{
+					_mode = pwm_input;
 					pwm_fill = _pwm_hight_val / (_pwm_hight_val + _pwm_low_val);
 					_pwm_index = 0x00U;
 					_pwm_hight_val = 0x00U;
@@ -105,6 +109,7 @@ void main_task(void *pvParameters)
 		switch (_mode)
 		{
 		case pwm_input:
+			_mode = undef;
 			// TODO: Add pwm generate
 			break;
 
@@ -186,14 +191,13 @@ void response_task(void *pvParameters)
 		else
 		{
 			response_index = 0x00U;
-			//vTaskSuspend(response_task_handle);
 		}
 	}
 }
 
 void send_info_task(void *pvParameters)
 {
-	
+
 	for (;;)
 	{
 		vTaskDelay(100);

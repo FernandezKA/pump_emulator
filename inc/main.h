@@ -14,14 +14,14 @@
 
 void ERROR_HANDLER(void);
 
-#define SAMPLE_PIN (1<<12)
+#define SAMPLE_PIN (1 << 12)
 #define SAMPLE_PORT GPIOB
 
 #define LED_PORT GPIOC
-#define LED_PIN (1<<13)
+#define LED_PIN (1 << 13)
 
 #define RESPONSE_PORT GPIOB
-#define RESPONSE_PIN  (1<<11)
+#define RESPONSE_PIN (1 << 11)
 
 void _clk_init(void);
 void _gpio_init(void);

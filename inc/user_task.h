@@ -8,7 +8,7 @@ enum work_mode
 {
 	pwm_input,
 	start_input,
-	stop_input, 
+	stop_input,
 	undef
 };
 
