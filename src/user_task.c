@@ -109,6 +109,7 @@ void main_task(void *pvParameters)
 		case pwm_input:
 			_mode = undef;
 			// TODO: Add pwm generate
+		
 			break;
 
 		case start_input:
