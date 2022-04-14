@@ -20,7 +20,7 @@ void main_task(void *pvParameters)
 	static uint8_t _valid_index = 0x00U;
 	static uint16_t _pwm_hight_val = 0x00U;
 	static uint16_t _pwm_low_val = 0x00U;
-	static double pwm_fill = 0x00U;
+	static uint16_t pwm_fill = 0x00U;
 	static uint8_t _pwm_index = 0x00U;
 	const static uint16_t valid_high = 160;
 	const static uint16_t valid_low = 140;
@@ -34,7 +34,7 @@ void main_task(void *pvParameters)
 		{
 			usart_data_transmit(USART0, ((_tmp_pulse.time >> 8) & 0xFFU));
 			usart_data_transmit(USART0, (_tmp_pulse.time & 0xFFU));
-			if (_tmp_pulse.time < 100)
+			if (_tmp_pulse.time < 400)
 			{
 				if (_pwm_index < 10)
 				{
@@ -52,7 +52,7 @@ void main_task(void *pvParameters)
 				else
 				{
 					_mode = pwm_input;
-					pwm_fill = _pwm_hight_val / (_pwm_hight_val + _pwm_low_val);
+					pwm_fill = (_pwm_hight_val * 100U) / (_pwm_hight_val + _pwm_low_val);
 					_pwm_index = 0x00U;
 					_pwm_hight_val = 0x00U;
 					_pwm_hight_val = 0x00U;
