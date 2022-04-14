@@ -26,6 +26,7 @@ void ERROR_HANDLER(void);
 void _clk_init(void);
 void _gpio_init(void);
 void _usart_init(void);
+void _tim0_init(void);
 void _tim1_init(void);
 void _tim2_init(void);
 void _tim3_init(void);
