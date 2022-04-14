@@ -49,7 +49,6 @@ void _tim0_init(void)
     timer_initpara.repetitioncounter = 0;
     timer_init(TIMER2,&timer_initpara);
 
-    /* TIMER2 configuration */
     /* TIMER2 CH0 PWM input capture configuration */
     timer_icinitpara.icpolarity  = TIMER_IC_POLARITY_RISING;
     timer_icinitpara.icselection = TIMER_IC_SELECTION_DIRECTTI;
@@ -58,11 +57,11 @@ void _tim0_init(void)
     timer_input_pwm_capture_config(TIMER0,TIMER_CH_0,&timer_icinitpara);
 
     /* slave mode selection: TIMER2 */
-    timer_input_trigger_source_select(TIMER0,TIMER_SMCFG_TRGSEL_CI0FE0);
-    timer_slave_mode_select(TIMER2,TIMER_SLAVE_MODE_RESTART);
+    //timer_input_trigger_source_select(TIMER0,TIMER_SMCFG_TRGSEL_CI0FE0);
+    //timer_slave_mode_select(TIMER2,TIMER_SLAVE_MODE_RESTART);
 
     /* select the master slave mode */
-    timer_master_slave_mode_config(TIMER0,TIMER_MASTER_SLAVE_MODE_ENABLE);
+    //timer_master_slave_mode_config(TIMER0,TIMER_MASTER_SLAVE_MODE_ENABLE);
 
     /* auto-reload preload enable */
     timer_auto_reload_shadow_enable(TIMER0);
@@ -142,7 +141,7 @@ void _tim3_init(void)
 
 void _nvic_enable(void)
 {
-	nvic_irq_enable(USART0_IRQn, 2, 2); // For UART0_PC
-	nvic_irq_enable(TIMER0_Channel_IRQn, 1, 1); //request input capture 
-	nvic_irq_enable(TIMER2_IRQn, 2, 1); //Detect filling pwm signal 
+	//nvic_irq_enable(USART0_IRQn, 2, 2); // For UART0_PC
+	//nvic_irq_enable(TIMER0_Channel_IRQn, 1, 1); //request input capture 
+	//nvic_irq_enable(TIMER2_IRQn, 2, 1); //Detect filling pwm signal 
 }

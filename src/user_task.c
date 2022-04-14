@@ -32,14 +32,12 @@ void main_task(void *pvParameters)
 	{
 		if (pdPASS == xQueueReceive(cap_signal, &_tmp_pulse, 0)) // Check capture signal
 		{
-			usart_data_transmit(USART0, ((_tmp_pulse.time >> 8) & 0xFFU));
-			usart_data_transmit(USART0, (_tmp_pulse.time & 0xFFU));
-			if (_tmp_pulse.time < 400)
+			if (_tmp_pulse.time < 100)
 			{
 				if (_pwm_index < 10)
 				{
 					_mode = undef;
-					if (_tmp_pulse.state)
+					if (!_tmp_pulse.state)  //A little of black magic
 					{
 						_pwm_hight_val += _tmp_pulse.time;
 					}
@@ -55,7 +53,7 @@ void main_task(void *pvParameters)
 					pwm_fill = (_pwm_hight_val * 100U) / (_pwm_hight_val + _pwm_low_val);
 					_pwm_index = 0x00U;
 					_pwm_hight_val = 0x00U;
-					_pwm_hight_val = 0x00U;
+					_pwm_low_val = 0x00U;
 				}
 			}
 			else if (_tmp_pulse.time > 100 && _tmp_pulse.time < 500)
@@ -128,6 +126,7 @@ void main_task(void *pvParameters)
 
 			break;
 		}
+		vTaskDelay(pdMS_TO_TICKS(1));
 	}
 }
 
@@ -154,7 +153,7 @@ void sample_task(void *pvParameters)
 
 		if (last_state == curr_state)
 		{
-			time_val++;
+ 			time_val++;
 		}
 		else
 		{
