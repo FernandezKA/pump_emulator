@@ -5,6 +5,7 @@
 #include "gd32f10x.h"
 #include "gd32f10x_usart.h"
 #include "gd32f10x_timer.h"
+#include "gd32f10x_adc.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -12,6 +13,7 @@
 
 #include "user_task.h"
 #include "tim_user.h"
+#include "adc.h"
 
 void ERROR_HANDLER(void);
 
@@ -31,6 +33,7 @@ void _tim0_init(void);
 void _tim1_init(void);
 void _tim2_init(void);
 void _tim3_init(void);
+void _adc_init(void);
 void _nvic_enable(void);
 
 #endif

@@ -24,6 +24,8 @@
 #define RTE_RTOS_FreeRTOS_HEAP_3        /* RTOS FreeRTOS Heap 3 */
 /* ARM.FreeRTOS::RTOS:Timers:10.4.6 */
 #define RTE_RTOS_FreeRTOS_TIMERS        /* RTOS FreeRTOS Timers */
+/* GigaDevice::Device:GD32F10x_StdPeripherals:ADC:2.0.1 */
+#define RTE_DEVICE_STDPERIPHERALS_ADC
 /* GigaDevice::Device:GD32F10x_StdPeripherals:FMC:2.0.1 */
 #define RTE_DEVICE_STDPERIPHERALS_FMC
 /* GigaDevice::Device:GD32F10x_StdPeripherals:GPIO:2.0.1 */

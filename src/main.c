@@ -18,8 +18,10 @@ int main()
 	if (pdPASS != xTaskCreate(sample_task, "sample_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &sample_task_handle))
 		ERROR_HANDLER();
 	if (pdPASS != xTaskCreate(response_task, "responce_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &response_task_handle))
-		ERROR_HANDLER(); 
+		ERROR_HANDLER();
 	if (pdPASS != xTaskCreate(send_info_task, "send_info_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &send_info_task_handle))
+		ERROR_HANDLER();
+	if (pdPASS != xTaskCreate(adc_task, "adc_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &adc_task_handle)) 
 		ERROR_HANDLER();
 	vTaskSuspend(response_task_handle);
 	vTaskStartScheduler();
@@ -38,6 +40,7 @@ static inline void SysInit(void)
 	_tim1_init();
 	_tim2_init();
 	_tim3_init();
+	_adc_init();
 	_nvic_enable();
 }
 
