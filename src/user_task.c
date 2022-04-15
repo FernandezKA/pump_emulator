@@ -233,15 +233,34 @@ void send_info_task(void *pvParameters)
 void adc_task(void *pvParameters)
 {
 	static uint16_t adc_value_0 = 0x00U;
+	static uint16_t adc_value_1 = 0x00U;
 	 for(;;)
 	 {
+		if(!adc_flag_get(ADC0, ADC_FLAG_STRC)){
+			if (adc_flag_get(ADC0, ADC_FLAG_EOC)){
+				adc_flag_clear(ADC0, ADC_FLAG_EOC);
+				adc_value_0 = adc_regular_data_read(ADC0);
+				adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
+			}
+		}
+		else{
+			if(adc_flag_get(ADC0, ADC_FLAG_EOC)){
+				adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
+			}	
+		}
 		vTaskDelay(pdMS_TO_TICKS(1));
-		if((ADC_STAT(ADC0) & ADC_STAT_EOC) == ADC_STAT_EOC){
+		if(adc_flag_get(ADC0, ADC_FLAG_EOC)){
+			adc_flag_clear(ADC0, ADC_FLAG_EOC);
 			adc_value_0 = adc_regular_data_read(ADC0);
-		}			
-		if (!adc_flag_get(ADC0, ADC_FLAG_STRC))
-		{
-			adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL); 
+			adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
+		}
+		else{
+			if (adc_flag_get(ADC0, ADC_FLAG_STRC)) {
+				adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
+			}
+			else{
+				adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
+			}
 		}
 	 }
 }
