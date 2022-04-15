@@ -108,6 +108,16 @@ void main_task(void *pvParameters)
 		{
 		case pwm_input:
 			_mode = undef;
+			if(pwm_fill > 0x32U){
+				 set_pwm(2, 80);
+				 set_pwm(3, 20);
+			}
+			else{
+				 set_pwm(2, 10);
+				 set_pwm(3, 90);
+			}
+				 enable_pwm(2);
+				 enable_pwm(3);
 			// TODO: Add pwm generate
 		
 			break;
