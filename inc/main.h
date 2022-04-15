@@ -11,6 +11,7 @@
 #include "queue.h"
 
 #include "user_task.h"
+#include "tim_user.h"
 
 void ERROR_HANDLER(void);
 

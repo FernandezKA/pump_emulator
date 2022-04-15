@@ -128,6 +128,8 @@ void _tim2_init(void)
     timer_auto_reload_shadow_enable(TIMER2);
     /* auto-reload preload enable */
     timer_enable(TIMER2);
+		disable_pwm(0x02U);
+		disable_pwm(0x03U);
 }
 
 void _tim3_init(void)
