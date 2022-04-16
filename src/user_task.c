@@ -1,10 +1,11 @@
 #include "user_task.h"
 
-TaskHandle_t ad8400_task_handle = NULL;
+TaskHandle_t ad8400_0_task_handle = NULL;
+TaskHandle_t ad8400_1_task_handle = NULL;
 TaskHandle_t main_task_handle = NULL;
 TaskHandle_t sample_task_handle = NULL;
 TaskHandle_t response_task_handle = NULL;
-TaskHandle_t send_info_task_handle = NULL; 
+TaskHandle_t send_info_task_handle = NULL;
 TaskHandle_t adc_task_handle = NULL;
 
 // This task used for definition AD8400 \
@@ -13,6 +14,7 @@ void ad8400_0_task(void *pvParameters)
 {
 	for (;;)
 	{
+		vTaskDelay(pdMS_TO_TICKS(1000));
 	}
 }
 
@@ -20,6 +22,7 @@ void ad8400_1_task(void *pvParameters)
 {
 	for (;;)
 	{
+		vTaskDelay(pdMS_TO_TICKS(1000));
 	}
 }
 
@@ -159,8 +162,23 @@ void sample_task(void *pvParameters)
 	uint16_t time_val = 0x00U;
 	uint32_t sysTick = 0x00U;
 	struct pulse curr_pulse;
+	
+	static uint16_t _intSysCounter = 0x00U;
+	
 	for (;;)
 	{
+		
+		//This we count time with discrete 1 sec. 
+		if(_intSysCounter == 1000U)
+		{
+			 _intSysCounter = 0x00U;
+			 ++SysTime;
+		}
+		else
+		{
+			 ++_intSysCounter;
+		}
+		
 		// Upd variables
 		last_state = curr_state;
 		++sysTick;
@@ -195,9 +213,7 @@ void sample_task(void *pvParameters)
 // This task used for genrating responce signal at start request
 void response_task(void *pvParameters)
 {
-	const struct pulse response[] = {{.state = true, .time = 180}, {.state = false,\
-	.time = 100}, {.state = true, .time = 100}, {.state = false, .time = 10},\
-	{.state = true, .time = 190}, {.state = false, .time = 100}};
+	const struct pulse response[] = {{.state = true, .time = 180}, {.state = false, .time = 100}, {.state = true, .time = 100}, {.state = false, .time = 10}, {.state = true, .time = 190}, {.state = false, .time = 100}};
 	uint8_t response_index = 0x00U;
 	for (;;)
 	{
@@ -229,38 +245,56 @@ void send_info_task(void *pvParameters)
 	}
 }
 
-//This task used for answering value from ADC
+// This task used for answering value from ADC
 void adc_task(void *pvParameters)
 {
 	static uint16_t adc_value_0 = 0x00U;
 	static uint16_t adc_value_1 = 0x00U;
-	 for(;;)
-	 {
-		if(!adc_flag_get(ADC0, ADC_FLAG_STRC)){
-			if (adc_flag_get(ADC0, ADC_FLAG_EOC)){
+	for (;;)
+	{
+		if (!adc_flag_get(ADC0, ADC_FLAG_STRC))
+		{
+			if (adc_flag_get(ADC0, ADC_FLAG_EOC))
+			{
 				adc_flag_clear(ADC0, ADC_FLAG_EOC);
-				adc_value_0 = adc_regular_data_read(ADC0);
+				if (0x02 == adc_get_channel())
+				{
+					adc_value_0 = adc_regular_data_read(ADC0);
+					adc_select_channel(0x03);
+				}
+				else
+				{
+					adc_value_1 = adc_regular_data_read(ADC0);
+					adc_select_channel(0x02);
+				}
 				adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
 			}
 		}
-		else{
-			if(adc_flag_get(ADC0, ADC_FLAG_EOC)){
+		else
+		{
+			if (adc_flag_get(ADC0, ADC_FLAG_EOC))
+			{
 				adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
-			}	
+			}
 		}
 		vTaskDelay(pdMS_TO_TICKS(1));
-		if(adc_flag_get(ADC0, ADC_FLAG_EOC)){
+		if (adc_flag_get(ADC0, ADC_FLAG_EOC))
+		{
 			adc_flag_clear(ADC0, ADC_FLAG_EOC);
+
 			adc_value_0 = adc_regular_data_read(ADC0);
 			adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
 		}
-		else{
-			if (adc_flag_get(ADC0, ADC_FLAG_STRC)) {
+		else
+		{
+			if (adc_flag_get(ADC0, ADC_FLAG_STRC))
+			{
 				adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
 			}
-			else{
+			else
+			{
 				adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
 			}
 		}
-	 }
+	}
 }

@@ -6,6 +6,8 @@ QueueHandle_t sig_gen_flag;
 
 static inline void SysInit(void);
 
+uint32_t SysTime = 0x00U;
+
 int main()
 {
 	SysInit();
@@ -23,11 +25,13 @@ int main()
 		ERROR_HANDLER();
 	if (pdPASS != xTaskCreate(adc_task, "adc_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &adc_task_handle)) 
 		ERROR_HANDLER();
+	if (pdPASS != xTaskCreate(ad8400_0_task, "ad8400_0 task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &ad8400_0_task_handle))
+		ERROR_HANDLER();
+		if (pdPASS != xTaskCreate(ad8400_1_task, "ad8400_1 task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &ad8400_1_task_handle))
+		ERROR_HANDLER();
 	vTaskSuspend(response_task_handle);
 	vTaskStartScheduler();
-	for (;;)
-	{
-	}
+	for (;;);
 	return 0;
 }
 

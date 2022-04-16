@@ -36,4 +36,6 @@ void _tim3_init(void);
 void _adc_init(void);
 void _nvic_enable(void);
 
+extern uint32_t SysTime;
+
 #endif
