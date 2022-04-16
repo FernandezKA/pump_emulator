@@ -44,6 +44,12 @@ void main_task(void *pvParameters)
 	const static uint16_t max_dev_stop = stop_seq * 0.3;  // 30%
 	for (;;)
 	{
+		if (isCapture && SysTime > 10U)
+		{
+			set_pwm(2, 10);
+			enable_pwm(2);
+		}
+
 		if (pdPASS == xQueueReceive(cap_signal, &_tmp_pulse, 0)) // Check capture signal
 		{
 			if (_tmp_pulse.time < 100)
@@ -132,8 +138,8 @@ void main_task(void *pvParameters)
 				set_pwm(2, 10);
 				set_pwm(3, pwm_fill);
 			}
-			enable_pwm(2);
-			enable_pwm(3);
+			//enable_pwm(2);
+			//enable_pwm(3);
 			break;
 
 		case start_input:
@@ -162,23 +168,23 @@ void sample_task(void *pvParameters)
 	uint16_t time_val = 0x00U;
 	uint32_t sysTick = 0x00U;
 	struct pulse curr_pulse;
-	
 	static uint16_t _intSysCounter = 0x00U;
-	
+
 	for (;;)
 	{
-		
-		//This we count time with discrete 1 sec. 
-		if(_intSysCounter == 1000U)
 		{
-			 _intSysCounter = 0x00U;
-			 ++SysTime;
+			// This we count time with discrete 1 sec.
+			if (_intSysCounter == 1000U)
+			{
+				_intSysCounter = 0x00U;
+				++SysTime;
+			}
+			else
+			{
+				++_intSysCounter;
+			}
 		}
-		else
-		{
-			 ++_intSysCounter;
-		}
-		
+
 		// Upd variables
 		last_state = curr_state;
 		++sysTick;
@@ -199,6 +205,7 @@ void sample_task(void *pvParameters)
 		else
 		{
 			xQueueSendToBack(cap_signal, &((struct pulse){.state = curr_state, .time = time_val}), 0);
+			isCapture = true;
 			time_val = 0x00U;
 		}
 		// LED activity

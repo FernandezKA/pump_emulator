@@ -4,6 +4,8 @@ QueueHandle_t pwm_value;
 QueueHandle_t cap_signal;
 QueueHandle_t sig_gen_flag;
 
+bool isCapture = false;
+
 static inline void SysInit(void);
 
 uint32_t SysTime = 0x00U;

@@ -38,4 +38,6 @@ void _nvic_enable(void);
 
 extern uint32_t SysTime;
 
+extern bool isCapture;
+
 #endif
