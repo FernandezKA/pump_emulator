@@ -14,6 +14,7 @@
 #include "user_task.h"
 #include "tim_user.h"
 #include "adc.h"
+#include "spi.h"
 
 void ERROR_HANDLER(void);
 

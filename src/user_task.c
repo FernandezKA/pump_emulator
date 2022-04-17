@@ -12,17 +12,21 @@ TaskHandle_t adc_task_handle = NULL;
 resistance with discrete timing, when defined by user
 void ad8400_0_task(void *pvParameters)
 {
+	uint8_t res_value = 0x00U;
 	for (;;)
 	{
-		vTaskDelay(pdMS_TO_TICKS(1000));
+		vTaskDelay(pdMS_TO_TICKS(10));
+		_AD8400_set(res_value, 0);
 	}
 }
 
 void ad8400_1_task(void *pvParameters)
 {
+	uint8_t res_value = 0x00U;
 	for (;;)
 	{
-		vTaskDelay(pdMS_TO_TICKS(1000));
+		vTaskDelay(pdMS_TO_TICKS(10));
+		_AD8400_set(res_value, 1);
 	}
 }
 
