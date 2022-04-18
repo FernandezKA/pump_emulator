@@ -16,7 +16,7 @@ void ad8400_0_task(void *pvParameters)
 	for (;;)
 	{
 		vTaskDelay(pdMS_TO_TICKS(1));
-		_AD8400_set(res_value, 0);
+		_AD8400_set(res_value++, 0);
 	}
 }
 
@@ -26,7 +26,7 @@ void ad8400_1_task(void *pvParameters)
 	for (;;)
 	{
 		vTaskDelay(pdMS_TO_TICKS(1));
-		_AD8400_set(res_value, 1);
+		_AD8400_set(res_value++, 1);
 	}
 }
 
