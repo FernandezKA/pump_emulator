@@ -16,7 +16,7 @@ void ad8400_0_task(void *pvParameters)
 	for (;;)
 	{
 		vTaskDelay(pdMS_TO_TICKS(1));
-		_AD8400_set(res_value++, 0);
+		_AD8400_set(res_value--, 0);
 	}
 }
 
@@ -26,7 +26,7 @@ void ad8400_1_task(void *pvParameters)
 	for (;;)
 	{
 		vTaskDelay(pdMS_TO_TICKS(1));
-		_AD8400_set(res_value++, 1);
+		_AD8400_set(res_value--, 1);
 	}
 }
 
@@ -46,12 +46,23 @@ void main_task(void *pvParameters)
 	const static uint16_t max_dev_high = valid_high / 10; // 10%
 	const static uint16_t max_dev_low = valid_low / 10;	  // 10%
 	const static uint16_t max_dev_stop = stop_seq * 0.3;  // 30%
+
+	static uint32_t _begin_responce_task = 0x00U;
+	const uint32_t _diff_time_stop_responce = 0x0FU;
+
 	for (;;)
 	{
+		// If line can't have actions more than 10 sec. -> begin pwm with 10% filling
 		if (isCapture && SysTime > 10U)
 		{
 			set_pwm(2, 10);
 			enable_pwm(2);
+		}
+		// If stop request isn't received more than _diff_time_stop_responce -> then suspend responce task
+		if (SysTime - _begin_responce_task > _diff_time_stop_responce)
+		{
+			vTaskSuspend(response_task_handle);
+			_begin_responce_task = 0x00U;
 		}
 
 		if (pdPASS == xQueueReceive(cap_signal, &_tmp_pulse, 0)) // Check capture signal
@@ -142,13 +153,14 @@ void main_task(void *pvParameters)
 				set_pwm(2, 10);
 				set_pwm(3, pwm_fill);
 			}
-			//enable_pwm(2);
-			//enable_pwm(3);
+			// enable_pwm(2);
+			// enable_pwm(3);
 			break;
 
 		case start_input:
 			vTaskResume(response_task_handle);
 			_valid_index = 0x00U;
+			_begin_responce_task = SysTime;
 			_mode = undef;
 			break;
 
@@ -252,7 +264,7 @@ void send_info_task(void *pvParameters)
 
 	for (;;)
 	{
-		vTaskDelay(100);
+		vTaskDelay(pdMS_TO_TICKS(100));
 	}
 }
 
