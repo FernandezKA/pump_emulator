@@ -15,11 +15,11 @@ void _spi_stop(uint8_t dev)
 {
 	if(0x00 == dev)
 	{
-		GPIO_OCTL(SPI_NSS_PORT) |= SPI_NSS_0;
+		GPIO_OCTL(SPI_NSS_PORT) |=SPI_NSS_0;
 	}
 	else if(0x01 == dev)
 	{
-		GPIO_OCTL(SPI_NSS_PORT) |= SPI_NSS_1;
+		GPIO_OCTL(SPI_NSS_PORT) |=SPI_NSS_1;
 	}
   GPIO_OCTL(SPI_PORT) &= ~SPI_SCK;
 }

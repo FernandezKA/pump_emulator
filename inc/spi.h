@@ -3,7 +3,7 @@
 #include "main.h"
 
 #define SPI_PORT GPIOA
-#define SPI_NSS_PORT  GPIOB
+#define SPI_NSS_PORT GPIOB
 #define SPI_SCK (1 << 5)
 #define SPI_NSS_0 (1 << 2)
 #define SPI_NSS_1 (1 << 10)
