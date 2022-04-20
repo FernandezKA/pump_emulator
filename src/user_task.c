@@ -13,6 +13,9 @@ TaskHandle_t sample_task_handle = NULL;
 TaskHandle_t response_task_handle = NULL;
 TaskHandle_t send_info_task_handle = NULL;
 TaskHandle_t adc_task_handle = NULL;
+TaskHandle_t pwm_def_handle = NULL;
+
+static inline void print(char *_data);
 
 // This task used for definition AD8400 \
 resistance with discrete timing, when defined by user
@@ -87,7 +90,7 @@ void main_task(void *pvParameters)
 
 		if (pdPASS == xQueueReceive(cap_signal, &_tmp_pulse, 0)) // Check capture signal
 		{
-			_last_capture_signal = SysTime;
+			_last_capture_time = SysTime;
 			if (_tmp_pulse.time < 100) // PWM case
 			{
 				if (_pwm_index < 10)
@@ -169,8 +172,15 @@ void main_task(void *pvParameters)
 				set_pwm(2, 80);
 				set_pwm(3, pwm_fill);
 			}
-			else if
+			else
 			{
+				if(eRunning == eTaskGetState(pwm_def_handle) || eReady == eTaskGetState(pwm_def_handle)){
+					
+				}
+				else{
+					 if (pdPASS != xTaskCreate(pwm_def_task, "pwm_def", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL))
+							print("Can't create task pwm_def\n\r");
+				}
 				set_pwm(2, 10);
 				set_pwm(3, pwm_fill);
 			}
@@ -363,7 +373,6 @@ void pwm_def_task(void *pvParameters)
 		vTaskDelay(pdMS_TO_TICKS(10000));
 		set_pwm(3, 45);
 		vTaskDelay(pdMS_TO_TICKS(10000));
-		vTaskSuspend(pwm_def_handle);
 	}
 }
 /***********************************************
