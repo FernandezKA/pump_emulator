@@ -1,3 +1,9 @@
+/*
+ * Project: pump emulator
+ * File: user_task.c
+ * Author: FernandezKA
+ */
+
 #include "user_task.h"
 
 TaskHandle_t ad8400_0_task_handle = NULL;
@@ -45,10 +51,13 @@ void main_task(void *pvParameters)
 	const static uint16_t stop_seq = 800;
 	const static uint16_t max_dev_high = valid_high / 10; // 10%
 	const static uint16_t max_dev_low = valid_low / 10;	  // 10%
-	const static uint16_t max_dev_stop = stop_seq / 10;  // 30%
+	const static uint16_t max_dev_stop = stop_seq / 10;	  // 30%
 
 	static uint32_t _begin_responce_task = 0x00U;
-	const uint32_t _diff_time_stop_responce = 0x0FU;
+	const uint32_t _diff_time_stop_responce = 0x14U;
+
+	static uint32_t _last_capture_time = 0x00U;
+	const static uint32_t _edge_capture_val = 0x0AU;
 
 	for (;;)
 	{
@@ -66,9 +75,20 @@ void main_task(void *pvParameters)
 			_begin_responce_task = 0x00U;
 		}
 
+		if (SysTime - _last_capture_time > _edge_capture_val)
+		{															  // Check edge states of lilne (connected to Vss or Vdd)
+			if ((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) != SAMPLE_PIN) // Connected to Vss
+			{
+			}
+			else // Connected to Vdd
+			{
+			}
+		}
+
 		if (pdPASS == xQueueReceive(cap_signal, &_tmp_pulse, 0)) // Check capture signal
 		{
-			if (_tmp_pulse.time < 100)
+			_last_capture_signal = SysTime;
+			if (_tmp_pulse.time < 100) // PWM case
 			{
 				if (_pwm_index < 10)
 				{
@@ -92,7 +112,7 @@ void main_task(void *pvParameters)
 					_pwm_low_val = 0x00U;
 				}
 			}
-			else if (_tmp_pulse.time > 100 && _tmp_pulse.time < 500)
+			else if (_tmp_pulse.time > 100 && _tmp_pulse.time < 500) // Request start detect
 			{
 				if (_tmp_pulse.state)
 				{ // High state
@@ -127,7 +147,7 @@ void main_task(void *pvParameters)
 					_mode = undef;
 				}
 			}
-			else
+			else // Request stop detect
 			{
 				if ((abs(_tmp_pulse.time - stop_seq) < max_dev_stop))
 				{
@@ -139,23 +159,23 @@ void main_task(void *pvParameters)
 				}
 			}
 		}
-
+		// Get actions for parsed signal state
 		switch (_mode)
 		{
 		case pwm_input:
 			_mode = undef;
-			if (pwm_fill > 0x32U)
+			if (pwm_fill > 0x0AU)
 			{
 				set_pwm(2, 80);
 				set_pwm(3, pwm_fill);
 			}
-			else
+			else if
 			{
 				set_pwm(2, 10);
 				set_pwm(3, pwm_fill);
 			}
-			 enable_pwm(2);
-			 enable_pwm(3);
+			enable_pwm(2);
+			enable_pwm(3);
 			break;
 
 		case start_input:
@@ -263,8 +283,16 @@ void response_task(void *pvParameters)
 void send_info_task(void *pvParameters)
 {
 
+	char _msg[0xFFU];
+	uint8_t _arr_ptr = 0x00U;
 	for (;;)
 	{
+		while (errQUEUE_EMPTY != xQueueReceive(msg_queue, &_msg[_arr_ptr++], 0)) // Read all of the data into queue
+			;
+		for (uint8_t i = 0; i < _arr_ptr; ++i) // Send message into usart at one byte
+		{
+			usart_data_transmit(USART0, _msg[i]);
+		}
 		vTaskDelay(pdMS_TO_TICKS(100));
 	}
 }
@@ -320,5 +348,41 @@ void adc_task(void *pvParameters)
 				adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
 			}
 		}
+	}
+}
+
+void pwm_def_task(void *pvParameters)
+{
+	for (;;)
+	{
+		set_pwm(3, 50);
+		vTaskDelay(pdMS_TO_TICKS(10000));
+		set_pwm(3, 45);
+		vTaskDelay(pdMS_TO_TICKS(10000));
+		set_pwm(3, 55);
+		vTaskDelay(pdMS_TO_TICKS(10000));
+		set_pwm(3, 45);
+		vTaskDelay(pdMS_TO_TICKS(10000));
+		vTaskSuspend(pwm_def_handle);
+	}
+}
+/***********************************************
+//End of task functions
+***********************************************/
+// This function send msg data into queue for task send_info
+static inline void print(char *_data)
+{
+	static uint8_t _last_char, _curr_char = 0x00U;
+	static char _msg_buff[0xFFU];
+	static uint8_t _ptr_msg = 0x00U;
+	while ((_last_char != 0x0D && _curr_char != 0x0A) || (_last_char != 0x0A && _curr_char != 0x0D) || _ptr_msg != 0xFFU)
+	{
+		_last_char = _curr_char;
+		_curr_char = _data[_ptr_msg++];
+	}
+
+	for (uint8_t i = 0x00U; i < _ptr_msg; ++i)
+	{
+		xQueueSendToBack(msg_queue, (void *)&_msg_buff[i], 0);
 	}
 }

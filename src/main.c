@@ -3,6 +3,7 @@
 QueueHandle_t pwm_value;
 QueueHandle_t cap_signal;
 QueueHandle_t sig_gen_flag;
+QueueHandle_t msg_queue; 
 
 bool isCapture = false;
 
@@ -16,6 +17,7 @@ int main()
 	pwm_value = xQueueCreate(1, sizeof(uint8_t));
 	cap_signal = xQueueCreate(1, sizeof(struct pulse));
 	sig_gen_flag = xQueueCreate(1, sizeof(bool));
+	msg_queue = xQueueCreate(64, sizeof(char));
 
 	if (pdPASS != xTaskCreate(main_task, "main_task", configMINIMAL_SECURE_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &main_task_handle))
 		ERROR_HANDLER();
