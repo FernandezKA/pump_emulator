@@ -1,6 +1,7 @@
 #ifndef _main_h_
 #define _main_h_
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "gd32f10x.h"
 #include "gd32f10x_usart.h"

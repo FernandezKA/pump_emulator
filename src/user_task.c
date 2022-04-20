@@ -15,7 +15,7 @@ void ad8400_0_task(void *pvParameters)
 	uint8_t res_value = 0x00U;
 	for (;;)
 	{
-		vTaskDelay(pdMS_TO_TICKS(1));
+		vTaskDelay(pdMS_TO_TICKS(10));
 		_AD8400_set(res_value--, 0);
 	}
 }
@@ -25,7 +25,7 @@ void ad8400_1_task(void *pvParameters)
 	uint8_t res_value = 0x00U;
 	for (;;)
 	{
-		vTaskDelay(pdMS_TO_TICKS(1));
+		vTaskDelay(pdMS_TO_TICKS(10));
 		_AD8400_set(res_value--, 1);
 	}
 }
@@ -45,7 +45,7 @@ void main_task(void *pvParameters)
 	const static uint16_t stop_seq = 800;
 	const static uint16_t max_dev_high = valid_high / 10; // 10%
 	const static uint16_t max_dev_low = valid_low / 10;	  // 10%
-	const static uint16_t max_dev_stop = stop_seq * 0.3;  // 30%
+	const static uint16_t max_dev_stop = stop_seq / 10;  // 30%
 
 	static uint32_t _begin_responce_task = 0x00U;
 	const uint32_t _diff_time_stop_responce = 0x0FU;
@@ -53,10 +53,11 @@ void main_task(void *pvParameters)
 	for (;;)
 	{
 		// If line can't have actions more than 10 sec. -> begin pwm with 10% filling
-		if (isCapture && SysTime > 10U)
+		if (!isCapture && SysTime > 10U)
 		{
 			set_pwm(2, 10);
 			enable_pwm(2);
+			enable_pwm(3);
 		}
 		// If stop request isn't received more than _diff_time_stop_responce -> then suspend responce task
 		if (SysTime - _begin_responce_task > _diff_time_stop_responce)
@@ -116,7 +117,7 @@ void main_task(void *pvParameters)
 					}
 				}
 
-				if (_valid_index > 0x3U)
+				if (_valid_index >= 0x03U)
 				{
 					_mode = start_input;
 					_valid_index = 0x00U;
@@ -153,8 +154,8 @@ void main_task(void *pvParameters)
 				set_pwm(2, 10);
 				set_pwm(3, pwm_fill);
 			}
-			// enable_pwm(2);
-			// enable_pwm(3);
+			 enable_pwm(2);
+			 enable_pwm(3);
 			break;
 
 		case start_input:
