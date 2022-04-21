@@ -13,3 +13,4 @@ Objects/freertos_evr.o
 *.ferna
 *.uvoptx
 *.uvprojx
+pump_emulator.uvguix.Admin

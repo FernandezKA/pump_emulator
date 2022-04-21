@@ -1,6 +1,9 @@
 #ifndef _main_h_
 #define _main_h_
-#include <stdbool.h>
+//#include <stdbool.h>
+
+#define true TRUE
+#define false !true
 #include <stdlib.h>
 
 #include "gd32f10x.h"

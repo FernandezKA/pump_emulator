@@ -174,13 +174,13 @@ void main_task(void *pvParameters)
 			}
 			else
 			{
-				if(eRunning == eTaskGetState(pwm_def_handle) || eReady == eTaskGetState(pwm_def_handle)){
-					
-				}
-				else{
-					 if (pdPASS != xTaskCreate(pwm_def_task, "pwm_def", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL))
-							print("Can't create task pwm_def\n\r");
-				}
+//				if(eRunning == eTaskGetState(pwm_def_handle) || eReady == eTaskGetState(pwm_def_handle)){
+//					
+//				}
+//				else{
+//					 if (pdPASS != xTaskCreate(pwm_def_task, "pwm_def", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL))
+//							print("Can't create task pwm_def\n\r");
+//				}
 				set_pwm(2, 10);
 				set_pwm(3, pwm_fill);
 			}
@@ -392,6 +392,6 @@ static inline void print(char *_data)
 
 	for (uint8_t i = 0x00U; i < _ptr_msg; ++i)
 	{
-		xQueueSendToBack(msg_queue, (void *)&_msg_buff[i], 0);
+		//xQueueSendToBack(msg_queue, (void *)&_msg_buff[i], 0);
 	}
 }
