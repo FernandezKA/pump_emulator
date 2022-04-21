@@ -65,7 +65,7 @@ void main_task(void *pvParameters)
 	for (;;)
 	{
 		// If line can't have actions more than 10 sec. -> begin pwm with 10% filling
-		if (!isCapture && SysTime > 10U)
+		if (SysTime > 10U)
 		{
 			set_pwm(2, 10);
 			enable_pwm(2);
@@ -184,8 +184,6 @@ void main_task(void *pvParameters)
 				set_pwm(2, 10);
 				set_pwm(3, pwm_fill);
 			}
-			enable_pwm(2);
-			enable_pwm(3);
 			break;
 
 		case start_input:
@@ -253,6 +251,12 @@ void sample_task(void *pvParameters)
 		{
 			xQueueSendToBack(cap_signal, &((struct pulse){.state = curr_state, .time = time_val}), 0);
 			isCapture = true;
+			if (curr_state){
+				GPIO_OCTL(INV_PORT) &= ~INV_PIN;
+			}
+			else{
+				GPIO_OCTL(INV_PORT)|=INV_PIN;
+			}
 			time_val = 0x00U;
 		}
 		// LED activity

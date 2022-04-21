@@ -31,6 +31,10 @@ void ERROR_HANDLER(void);
 #define RESPONSE_PORT GPIOA
 #define RESPONSE_PIN (1 << 10)
 
+#define INV_PORT GPIOB
+#define INV_PIN (1<<0)
+
+
 void _clk_init(void);
 void _gpio_init(void);
 void _usart_init(void);
