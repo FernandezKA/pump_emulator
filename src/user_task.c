@@ -25,7 +25,7 @@ void ad8400_0_task(void *pvParameters)
 	for (;;)
 	{
 		vTaskDelay(pdMS_TO_TICKS(10));
-		_AD8400_set(res_value--, 0);
+		_AD8400_set(res_value++, 0);
 	}
 }
 
@@ -35,7 +35,7 @@ void ad8400_1_task(void *pvParameters)
 	for (;;)
 	{
 		vTaskDelay(pdMS_TO_TICKS(10));
-		_AD8400_set(res_value--, 1);
+		_AD8400_set(res_value++, 1);
 	}
 }
 
@@ -49,26 +49,27 @@ void main_task(void *pvParameters)
 	static uint16_t _pwm_low_val = 0x00U;
 	static uint16_t pwm_fill = 0x00U;
 	static uint8_t _pwm_index = 0x00U;
+	//Valid times definitions
 	const static uint16_t valid_high = 160;
 	const static uint16_t valid_low = 140;
 	const static uint16_t stop_seq = 800;
+	//Max deviation definitions
 	const static uint16_t max_dev_high = valid_high / 10; // 10%
 	const static uint16_t max_dev_low = valid_low / 10;	  // 10%
-	const static uint16_t max_dev_stop = stop_seq / 10;	  // 30%
-
+	const static uint16_t max_dev_stop = stop_seq / 10;	  // 10%
+	//Used for action with timout
 	static uint32_t _begin_responce_task = 0x00U;
 	const uint32_t _diff_time_stop_responce = 0x14U;
-
+	//Used for detect empty line (connected to Vss or Vdd)
 	static uint32_t _last_capture_time = 0x00U;
 	const static uint32_t _edge_capture_val = 0x0AU;
 
 	for (;;)
 	{
-		// If line can't have actions more than 10 sec. -> begin pwm with 10% filling
+		//Get pwm only after 10sec. waiting
 		if (SysTime > 10U)
 		{
-			set_pwm(2, 10);
-			enable_pwm(2);
+			set_pwm(3, 10);
 			enable_pwm(3);
 		}
 		// If stop request isn't received more than _diff_time_stop_responce -> then suspend responce task
@@ -77,23 +78,26 @@ void main_task(void *pvParameters)
 			vTaskSuspend(response_task_handle);
 			_begin_responce_task = 0x00U;
 		}
-
+		//If state of line isn't different more then _edge_cap_val, then detect error
 		if (SysTime - _last_capture_time > _edge_capture_val)
 		{															  // Check edge states of lilne (connected to Vss or Vdd)
 			if ((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) != SAMPLE_PIN) // Connected to Vss
 			{
+				set_pwm(3, 0);
 			}
 			else // Connected to Vdd
 			{
+				set_pwm(3, 0);
 			}
 		}
-
+		//If new sample is loaded into queue => parse it
 		if (pdPASS == xQueueReceive(cap_signal, &_tmp_pulse, 0)) // Check capture signal
 		{
 			_last_capture_time = SysTime;
+			//Divide by 3 groups - with knowledge timings
 			if (_tmp_pulse.time < 100) // PWM case
 			{
-				if (_pwm_index < 10)
+				if (_pwm_index < 11)
 				{
 					_mode = undef;
 					if (!_tmp_pulse.state) // A little of black magic
@@ -106,7 +110,7 @@ void main_task(void *pvParameters)
 					}
 					++_pwm_index;
 				}
-				else
+				else //It's not PWM timings - reset value
 				{
 					_mode = pwm_input;
 					pwm_fill = (_pwm_hight_val * 100U) / (_pwm_hight_val + _pwm_low_val);
@@ -121,7 +125,7 @@ void main_task(void *pvParameters)
 				{ // High state
 					if (abs(_tmp_pulse.time - valid_high) < max_dev_high)
 					{
-						++_valid_index;
+						++_valid_index;//Detect valid of sequence at index, valid == 4
 					}
 					else
 					{
@@ -140,7 +144,7 @@ void main_task(void *pvParameters)
 					}
 				}
 
-				if (_valid_index >= 0x03U)
+				if (_valid_index >= 0x03U) //valid_index - 1, because count from 0 
 				{
 					_mode = start_input;
 					_valid_index = 0x00U;
@@ -162,39 +166,36 @@ void main_task(void *pvParameters)
 				}
 			}
 		}
+		
+		
 		// Get actions for parsed signal state
 		switch (_mode)
 		{
 		case pwm_input:
-			_mode = undef;
-			if (pwm_fill > 0x0AU)
-			{
-				set_pwm(2, 80);
-				set_pwm(3, pwm_fill);
+			_mode = undef;//reset state for next capture
+			if (pwm_fill < 10U){
+				set_pwm(3, 0);
 			}
-			else
-			{
-//				if(eRunning == eTaskGetState(pwm_def_handle) || eReady == eTaskGetState(pwm_def_handle)){
-//					
-//				}
-//				else{
-//					 if (pdPASS != xTaskCreate(pwm_def_task, "pwm_def", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL))
-//							print("Can't create task pwm_def\n\r");
-//				}
-				set_pwm(2, 10);
-				set_pwm(3, pwm_fill);
+			else if (pwm_fill < 40U){
+				set_pwm(3, 30);
+			}
+			else if (pwm_fill < 80U){
+				set_pwm(3, 50);
+			}
+			else{
+				set_pwm(3, 80);
 			}
 			break;
 
 		case start_input:
-			vTaskResume(response_task_handle);
+			vTaskResume(response_task_handle);//Begin generation responce for start request
 			_valid_index = 0x00U;
 			_begin_responce_task = SysTime;
 			_mode = undef;
 			break;
 
 		case stop_input:
-			vTaskSuspend(response_task_handle);
+			vTaskSuspend(response_task_handle); //Suspend responce_task (TODO: delete for free space)
 			_mode = undef;
 			break;
 
@@ -202,7 +203,7 @@ void main_task(void *pvParameters)
 
 			break;
 		}
-		vTaskDelay(pdMS_TO_TICKS(1));
+		vTaskDelay(pdMS_TO_TICKS(5));//Get answering timings
 	}
 }
 
@@ -242,15 +243,16 @@ void sample_task(void *pvParameters)
 		{
 			curr_state = false;
 		}
-
+		//Check switch from low -> hight, or reversed
 		if (last_state == curr_state)
 		{
 			time_val++;
 		}
 		else
 		{
-			xQueueSendToBack(cap_signal, &((struct pulse){.state = curr_state, .time = time_val}), 0);
+			xQueueSendToBack(cap_signal, &((struct pulse){.state = curr_state, .time = time_val}), 0);//Send pulse on queue, received on main process
 			isCapture = true;
+			//Repeat input signal with inversion on PA0
 			if (curr_state){
 				GPIO_OCTL(INV_PORT) &= ~INV_PIN;
 			}
@@ -259,7 +261,7 @@ void sample_task(void *pvParameters)
 			}
 			time_val = 0x00U;
 		}
-		// LED activity
+		// LED activity, blink every second
 		if ((sysTick % 500) == 0U)
 		{
 			GPIO_OCTL(LED_PORT) ^= LED_PIN;
@@ -293,6 +295,8 @@ void response_task(void *pvParameters)
 		}
 	}
 }
+
+//TODO: delete, and use global variable for more effective using of memory 
 // This task send info message to USART
 void send_info_task(void *pvParameters)
 {
@@ -365,6 +369,7 @@ void adc_task(void *pvParameters)
 	}
 }
 
+//This task used for more different pwm fillings forming (begin at detect pwm_fill on pwm_in)
 void pwm_def_task(void *pvParameters)
 {
 	for (;;)
