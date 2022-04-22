@@ -45,32 +45,30 @@ void main_task(void *pvParameters)
 	static struct pulse _tmp_pulse;
 	static enum work_mode _mode;
 	static uint8_t _valid_index = 0x00U;
-	static uint16_t _pwm_hight_val = 0x00U;
-	static uint16_t _pwm_low_val = 0x00U;
-	static uint16_t pwm_fill = 0x00U;
-	static uint8_t _pwm_index = 0x00U;
-	//Valid times definitions
+	// Valid times definitions
 	const static uint16_t valid_high = 160;
 	const static uint16_t valid_low = 140;
 	const static uint16_t stop_seq = 800;
-	//Max deviation definitions
+	// Max deviation definitions
 	const static uint16_t max_dev_high = valid_high / 10; // 10%
 	const static uint16_t max_dev_low = valid_low / 10;	  // 10%
 	const static uint16_t max_dev_stop = stop_seq / 10;	  // 10%
-	//Used for action with timout
+	// Used for action with timout
 	static uint32_t _begin_responce_task = 0x00U;
 	const uint32_t _diff_time_stop_responce = 0x14U;
-	//Used for detect empty line (connected to Vss or Vdd)
+	// Used for detect empty line (connected to Vss or Vdd)
 	static uint32_t _last_capture_time = 0x00U;
 	const static uint32_t _edge_capture_val = 0x0AU;
+	// This variable for input measured pwm_value
+	static uint8_t _pwm_measured = 0x00U;
 
 	for (;;)
 	{
-		//Get pwm only after 10sec. waiting
-		if (SysTime > 10U)
+		// Get pwm only after 10sec. waiting
+		if (SysTime > 10U && _mode != pwm_input)
 		{
-			set_pwm(3, 10);
-			enable_pwm(3);
+			set_pwm(pwm_1, 10);
+			enable_pwm(pwm_1);
 		}
 		// If stop request isn't received more than _diff_time_stop_responce -> then suspend responce task
 		if (SysTime - _begin_responce_task > _diff_time_stop_responce)
@@ -78,46 +76,20 @@ void main_task(void *pvParameters)
 			vTaskSuspend(response_task_handle);
 			_begin_responce_task = 0x00U;
 		}
-		//If state of line isn't different more then _edge_cap_val, then detect error
+		// If state of line isn't different more then _edge_cap_val, then detect error
 		if (SysTime - _last_capture_time > _edge_capture_val)
-		{															  // Check edge states of lilne (connected to Vss or Vdd)
-			if ((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) != SAMPLE_PIN) // Connected to Vss
-			{
-				set_pwm(3, 0);
-			}
-			else // Connected to Vdd
-			{
-				set_pwm(3, 0);
-			}
+		{ // Check edge states of lilne (connected to Vss or Vdd)
+			set_pwm(pwm_1, 0);
 		}
-		//If new sample is loaded into queue => parse it
+		// If new sample is loaded into queue => parse it
 		if (pdPASS == xQueueReceive(cap_signal, &_tmp_pulse, 0)) // Check capture signal
 		{
 			_last_capture_time = SysTime;
-			//Divide by 3 groups - with knowledge timings
+			// Divide by 3 groups - with knowledge timings
 			if (_tmp_pulse.time < 100) // PWM case
 			{
-				if (_pwm_index < 11)
-				{
-					_mode = undef;
-					if (!_tmp_pulse.state) // A little of black magic
-					{
-						_pwm_hight_val += _tmp_pulse.time;
-					}
-					else
-					{
-						_pwm_low_val += _tmp_pulse.time;
-					}
-					++_pwm_index;
-				}
-				else //It's not PWM timings - reset value
-				{
-					_mode = pwm_input;
-					pwm_fill = (_pwm_hight_val * 100U) / (_pwm_hight_val + _pwm_low_val);
-					_pwm_index = 0x00U;
-					_pwm_hight_val = 0x00U;
-					_pwm_low_val = 0x00U;
-				}
+				__NOP();
+				_mode = pwm_input;
 			}
 			else if (_tmp_pulse.time > 100 && _tmp_pulse.time < 500) // Request start detect
 			{
@@ -125,7 +97,7 @@ void main_task(void *pvParameters)
 				{ // High state
 					if (abs(_tmp_pulse.time - valid_high) < max_dev_high)
 					{
-						++_valid_index;//Detect valid of sequence at index, valid == 4
+						++_valid_index; // Detect valid of sequence at index, valid == 4
 					}
 					else
 					{
@@ -144,7 +116,7 @@ void main_task(void *pvParameters)
 					}
 				}
 
-				if (_valid_index >= 0x03U) //valid_index - 1, because count from 0 
+				if (_valid_index >= 0x03U) // valid_index - 1, because count from 0
 				{
 					_mode = start_input;
 					_valid_index = 0x00U;
@@ -166,36 +138,47 @@ void main_task(void *pvParameters)
 				}
 			}
 		}
-		
-		
+
 		// Get actions for parsed signal state
 		switch (_mode)
 		{
 		case pwm_input:
-			_mode = undef;//reset state for next capture
-			if (pwm_fill < 10U){
-				set_pwm(3, 0);
+			_mode = undef; // reset state for next capture
+			if (pdPASS == xQueueReceive(pwm_value, &_pwm_measured, 0))
+			{
+				if (_pwm_measured < 11U)
+				{
+					set_pwm(pwm_1, 0U);
+				}
+				else if (_pwm_measured < 41U)
+				{
+					set_pwm(pwm_1, 30U);
+				}
+				else if (_pwm_measured < 81U)
+				{
+					set_pwm(pwm_1, 50U);
+				}
+				else
+				{
+					set_pwm(pwm_1, 80U);
+				}
 			}
-			else if (pwm_fill < 40U){
-				set_pwm(3, 30);
-			}
-			else if (pwm_fill < 80U){
-				set_pwm(3, 50);
-			}
-			else{
-				set_pwm(3, 80);
+			else
+			{
+				// PWM measure less then 2 sec.
+				__NOP(); // Need to delete, only for debug
 			}
 			break;
 
 		case start_input:
-			vTaskResume(response_task_handle);//Begin generation responce for start request
+			vTaskResume(response_task_handle); // Begin generation responce for start request
 			_valid_index = 0x00U;
 			_begin_responce_task = SysTime;
 			_mode = undef;
 			break;
 
 		case stop_input:
-			vTaskSuspend(response_task_handle); //Suspend responce_task (TODO: delete for free space)
+			vTaskSuspend(response_task_handle); // Suspend responce_task (TODO: delete for free space)
 			_mode = undef;
 			break;
 
@@ -203,7 +186,7 @@ void main_task(void *pvParameters)
 
 			break;
 		}
-		vTaskDelay(pdMS_TO_TICKS(5));//Get answering timings
+		vTaskDelay(pdMS_TO_TICKS(5)); // Get answering timings
 	}
 }
 
@@ -215,12 +198,37 @@ void sample_task(void *pvParameters)
 	uint32_t sysTick = 0x00U;
 	struct pulse curr_pulse;
 	static uint16_t _intSysCounter = 0x00U;
+	static uint16_t _samples_pwm = 0x00U;
+	static uint16_t _samples_pwm_index = 0x00U;
+	static uint32_t pwm_fill = 0x00U;
 
 	for (;;)
 	{
+		//Get pwm filling value
 		{
-			// This we count time with discrete 1 sec.
-			if (_intSysCounter == 1000U)
+			if (_samples_pwm_index < 1999U)
+			{ // Get pwm measuring at 2 seconds
+
+				if ((GPIO_OCTL(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN)
+				{
+					++_samples_pwm;
+					++_samples_pwm_index;
+				}
+				else
+				{
+					++_samples_pwm_index;
+				}
+			}
+			else
+			{
+				pwm_fill = (_samples_pwm * 100U) / _samples_pwm_index;
+				_samples_pwm_index = 0x00U;
+				_samples_pwm = 0x00U;
+				xQueueSendToBack(pwm_value, &pwm_fill, 0);
+			}
+			
+			//Simplest time counter with inc. time = 1 sec
+			if (_intSysCounter == 999U)
 			{
 				_intSysCounter = 0x00U;
 				++SysTime;
@@ -230,7 +238,7 @@ void sample_task(void *pvParameters)
 				++_intSysCounter;
 			}
 		}
-
+		//Detect type of input signal
 		// Upd variables
 		last_state = curr_state;
 		++sysTick;
@@ -243,24 +251,28 @@ void sample_task(void *pvParameters)
 		{
 			curr_state = false;
 		}
-		//Check switch from low -> hight, or reversed
+		// Check switch from low -> hight, or reversed
 		if (last_state == curr_state)
 		{
 			time_val++;
 		}
 		else
 		{
-			xQueueSendToBack(cap_signal, &((struct pulse){.state = curr_state, .time = time_val}), 0);//Send pulse on queue, received on main process
+			// Send pulse on queue,will be received on main process
+			xQueueSendToBack(cap_signal, &((struct pulse){.state = curr_state, .time = time_val}), 0); 
 			isCapture = true;
-			//Repeat input signal with inversion on PA0
-			if (curr_state){
+			// Repeat input signal with inversion on PA0
+			if (curr_state)
+			{
 				GPIO_OCTL(INV_PORT) &= ~INV_PIN;
 			}
-			else{
-				GPIO_OCTL(INV_PORT)|=INV_PIN;
+			else
+			{
+				GPIO_OCTL(INV_PORT) |= INV_PIN;
 			}
 			time_val = 0x00U;
 		}
+		
 		// LED activity, blink every second
 		if ((sysTick % 500) == 0U)
 		{
@@ -296,8 +308,8 @@ void response_task(void *pvParameters)
 	}
 }
 
-//TODO: delete, and use global variable for more effective using of memory 
-// This task send info message to USART
+// TODO: delete, and use global variable for more effective using of memory
+//  This task send info message to USART
 void send_info_task(void *pvParameters)
 {
 
@@ -305,12 +317,7 @@ void send_info_task(void *pvParameters)
 	uint8_t _arr_ptr = 0x00U;
 	for (;;)
 	{
-		while (errQUEUE_EMPTY != xQueueReceive(msg_queue, &_msg[_arr_ptr++], 0)) // Read all of the data into queue
-			;
-		for (uint8_t i = 0; i < _arr_ptr; ++i) // Send message into usart at one byte
-		{
-			usart_data_transmit(USART0, _msg[i]);
-		}
+
 		vTaskDelay(pdMS_TO_TICKS(100));
 	}
 }
@@ -369,7 +376,7 @@ void adc_task(void *pvParameters)
 	}
 }
 
-//This task used for more different pwm fillings forming (begin at detect pwm_fill on pwm_in)
+// This task used for more different pwm fillings forming (begin at detect pwm_fill on pwm_in)
 void pwm_def_task(void *pvParameters)
 {
 	for (;;)
@@ -384,23 +391,7 @@ void pwm_def_task(void *pvParameters)
 		vTaskDelay(pdMS_TO_TICKS(10000));
 	}
 }
+
 /***********************************************
 //End of task functions
 ***********************************************/
-// This function send msg data into queue for task send_info
-static inline void print(char *_data)
-{
-	static uint8_t _last_char, _curr_char = 0x00U;
-	static char _msg_buff[0xFFU];
-	static uint8_t _ptr_msg = 0x00U;
-	while ((_last_char != 0x0D && _curr_char != 0x0A) || (_last_char != 0x0A && _curr_char != 0x0D) || _ptr_msg != 0xFFU)
-	{
-		_last_char = _curr_char;
-		_curr_char = _data[_ptr_msg++];
-	}
-
-	for (uint8_t i = 0x00U; i < _ptr_msg; ++i)
-	{
-		//xQueueSendToBack(msg_queue, (void *)&_msg_buff[i], 0);
-	}
-}

@@ -1,12 +1,12 @@
 #include "tim_user.h"
 
-void set_pwm(uint8_t channel, uint8_t fill)
+void set_pwm(enum ePWM channel, uint8_t fill)
 {
-	if (0x02U == channel)
+	if (pwm_1 == channel)
 	{
 		timer_channel_output_pulse_value_config(TIMER2, TIMER_CH_2, 10 * fill - 1U);
 	}
-	else if (0x03U == channel)
+	else if (pwm_2 == channel)
 	{
 		timer_channel_output_pulse_value_config(TIMER2, TIMER_CH_3, 10 * fill - 1U);
 	}
@@ -16,13 +16,13 @@ void set_pwm(uint8_t channel, uint8_t fill)
 	}
 }
 
-void enable_pwm(uint8_t channel)
+void enable_pwm(enum ePWM channel)
 {
-	if (0x02U == channel)
+	if (pwm_1 == channel)
 	{
 		TIMER_CHCTL2(TIMER2) |= TIMER_CHCTL2_CH2EN;
 	}
-	else if (0x03U == channel)
+	else if (pwm_2 == channel)
 	{
 		TIMER_CHCTL2(TIMER2) |= TIMER_CHCTL2_CH3EN;
 	}
@@ -31,13 +31,13 @@ void enable_pwm(uint8_t channel)
 		__NOP();
 	}
 }
-void disable_pwm(uint8_t channel)
+void disable_pwm(enum ePWM channel)
 {
-	if (0x02U == channel)
+	if (pwm_1 == channel)
 	{
 		TIMER_CHCTL2(TIMER2) &= ~TIMER_CHCTL2_CH2EN;
 	}
-	else if (0x03U == channel)
+	else if (pwm_2 == channel)
 	{
 		TIMER_CHCTL2(TIMER2) &= ~TIMER_CHCTL2_CH3EN;
 	}
@@ -47,17 +47,17 @@ void disable_pwm(uint8_t channel)
 	}
 }
 
-bool get_pwm_state(uint8_t channel)
+bool get_pwm_state(enum ePWM channel)
 {
 	bool state = false;
-	if (0x02U == channel)
+	if (pwm_1 == channel)
 	{
 		if ((TIMER_CHCTL2(TIMER2) & TIMER_CHCTL2_CH2EN) == TIMER_CHCTL2_CH2EN)
 		{
 			state = true;
 		}
 	}
-	else if (0x03U == channel)
+	else if (pwm_2 == channel)
 	{
 		if ((TIMER_CHCTL2(TIMER2) & TIMER_CHCTL2_CH3EN) == TIMER_CHCTL2_CH3EN)
 		{

@@ -3,7 +3,6 @@
 QueueHandle_t pwm_value;
 QueueHandle_t cap_signal;
 QueueHandle_t sig_gen_flag;
-QueueHandle_t msg_queue; 
 
 bool isCapture = false;
 
@@ -17,7 +16,6 @@ int main()
 	pwm_value = xQueueCreate(1, sizeof(uint8_t));
 	cap_signal = xQueueCreate(1, sizeof(struct pulse));
 	sig_gen_flag = xQueueCreate(1, sizeof(bool));
-	msg_queue = xQueueCreate(64, sizeof(char));
 
 	if (pdPASS != xTaskCreate(main_task, "main_task", configMINIMAL_SECURE_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &main_task_handle))
 		ERROR_HANDLER();
@@ -25,17 +23,18 @@ int main()
 		ERROR_HANDLER();
 	if (pdPASS != xTaskCreate(response_task, "responce_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &response_task_handle))
 		ERROR_HANDLER();
-//	if (pdPASS != xTaskCreate(send_info_task, "send_info_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &send_info_task_handle))
-//		ERROR_HANDLER();
-	if (pdPASS != xTaskCreate(adc_task, "adc_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &adc_task_handle)) 
+	//	if (pdPASS != xTaskCreate(send_info_task, "send_info_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &send_info_task_handle))
+	//		ERROR_HANDLER();
+	if (pdPASS != xTaskCreate(adc_task, "adc_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &adc_task_handle))
 		ERROR_HANDLER();
 	if (pdPASS != xTaskCreate(ad8400_0_task, "ad8400_0 task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &ad8400_0_task_handle))
 		ERROR_HANDLER();
-		if (pdPASS != xTaskCreate(ad8400_1_task, "ad8400_1 task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &ad8400_1_task_handle))
+	if (pdPASS != xTaskCreate(ad8400_1_task, "ad8400_1 task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &ad8400_1_task_handle))
 		ERROR_HANDLER();
 	vTaskSuspend(response_task_handle);
 	vTaskStartScheduler();
-	for (;;);
+	for (;;)
+		;
 	return 0;
 }
 
