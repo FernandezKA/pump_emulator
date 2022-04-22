@@ -171,14 +171,18 @@ void main_task(void *pvParameters)
 			break;
 
 		case start_input:
-			vTaskResume(response_task_handle); // Begin generation responce for start request
+			if(pdPASS != xTaskCreate(response_task, "responce_tesk", configMINIMAL_STACK_SIZE,NULL, tskIDLE_PRIORITY + 1, &response_task_handle)){
+				ERROR_HANDLER();
+			}
+			//vTaskResume(response_task_handle); // Begin generation responce for start request
 			_valid_index = 0x00U;
 			_begin_responce_task = SysTime;
 			_mode = undef;
 			break;
 
 		case stop_input:
-			vTaskSuspend(response_task_handle); // Suspend responce_task (TODO: delete for free space)
+			vTaskDelete(response_task_handle);
+			//vTaskSuspend(response_task_handle); // Suspend responce_task (TODO: delete for free space)
 			_mode = undef;
 			break;
 
@@ -200,16 +204,15 @@ void sample_task(void *pvParameters)
 	static uint16_t _intSysCounter = 0x00U;
 	static uint16_t _samples_pwm = 0x00U;
 	static uint16_t _samples_pwm_index = 0x00U;
-	static uint32_t pwm_fill = 0x00U;
+	static uint8_t pwm_fill = 0x00U;
 
 	for (;;)
 	{
 		//Get pwm filling value
-		{
 			if (_samples_pwm_index < 1999U)
 			{ // Get pwm measuring at 2 seconds
 
-				if ((GPIO_OCTL(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN)
+				if((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN)
 				{
 					++_samples_pwm;
 					++_samples_pwm_index;
@@ -237,7 +240,6 @@ void sample_task(void *pvParameters)
 			{
 				++_intSysCounter;
 			}
-		}
 		//Detect type of input signal
 		// Upd variables
 		last_state = curr_state;
