@@ -61,15 +61,22 @@ void main_task(void *pvParameters)
 	const static uint32_t _edge_capture_val = 0x0AU;
 	// This variable for input measured pwm_value
 	static uint8_t _pwm_measured = 0x00U;
+	disable_pwm(pwm_1);
 
 	for (;;)
 	{
 		// Get pwm only after 10sec. waiting
-		if (SysTime > 10U && _mode != pwm_input)
+				if (SysTime > 2U)
 		{
 			set_pwm(pwm_1, 10);
 			enable_pwm(pwm_1);
 		}
+		
+//		if (SysTime > 10U && _mode != pwm_input)
+//		{
+//			set_pwm(pwm_1, 10);
+//			enable_pwm(pwm_1);
+//		}
 		// If stop request isn't received more than _diff_time_stop_responce -> then suspend responce task
 		if (SysTime - _begin_responce_task > _diff_time_stop_responce)
 		{
