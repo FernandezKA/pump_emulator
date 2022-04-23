@@ -58,7 +58,7 @@ void main_task(void *pvParameters)
 	const uint32_t _diff_time_stop_responce = 0x14U;
 	// Used for detect empty line (connected to Vss or Vdd)
 	static uint32_t _last_capture_time = 0x00U;
-	const static uint32_t _edge_capture_val = 0x0AU;
+	const static uint32_t _edge_capture_val = 0x02U;
 	// This variable for input measured pwm_value
 	static uint8_t _pwm_measured = 0x00U;
 	set_pwm(pwm_1, 0x0AU);
@@ -403,13 +403,13 @@ void pwm_def_task(void *pvParameters)
 {
 	for (;;)
 	{
-		set_pwm(3, 50);
+		set_pwm(pwm_2, 50U);
 		vTaskDelay(pdMS_TO_TICKS(10000));
-		set_pwm(3, 45);
+		set_pwm(pwm_2, 45U);
 		vTaskDelay(pdMS_TO_TICKS(10000));
-		set_pwm(3, 55);
+		set_pwm(pwm_2, 55U);
 		vTaskDelay(pdMS_TO_TICKS(10000));
-		set_pwm(3, 45);
+		set_pwm(pwm_2, 45U);
 		vTaskDelay(pdMS_TO_TICKS(10000));
 	}
 }
