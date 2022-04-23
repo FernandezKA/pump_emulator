@@ -67,11 +67,11 @@ void main_task(void *pvParameters)
 	for (;;)
 	{
 		// Get pwm_2 only after 10sec. waiting
-		//		if (SysTime > 10U && _mode != pwm_input)
-		//		{
-		//			set_pwm(pwm_2, 10);
-		//			enable_pwm(pwm_2);
-		//		}
+				if (SysTime > 10U && _mode != pwm_input)
+				{
+					set_pwm(pwm_2, 10);
+					enable_pwm(pwm_2);
+				}
 		// If stop request isn't received more than _diff_time_stop_responce -> then suspend responce task
 		if (SysTime - _begin_responce_task > _diff_time_stop_responce)
 		{
@@ -199,9 +199,11 @@ void main_task(void *pvParameters)
 		case stop_input:
 			if (NULL != response_task_handle)
 			{
-				vTaskDelete(response_task_handle);
+				vTaskSuspend(response_task_handle);
 			}
-			//  vTaskSuspend(response_task_handle); // Suspend responce_task (TODO: delete for free space)
+			else{
+				//TODO: Add msg about unstarted task
+			}
 			_mode = undef;
 			break;
 

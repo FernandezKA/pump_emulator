@@ -38,7 +38,7 @@ static inline void SysInit(void)
 	_clk_init();
 	_gpio_init();
 	_usart_init();
-	_tim0_init();
+	//_tim0_init();
 	_tim1_init();
 	_tim2_init();
 	_tim3_init();
