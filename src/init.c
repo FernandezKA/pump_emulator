@@ -124,6 +124,7 @@ void _tim1_init(void)
   timer_auto_reload_shadow_enable(TIMER1);
   /* auto-reload preload enable */
   timer_enable(TIMER1);
+	disable_pwm(pwm_2);
 }
 
 void _tim2_init(void)

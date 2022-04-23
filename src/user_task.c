@@ -13,7 +13,7 @@ TaskHandle_t sample_task_handle = NULL;
 TaskHandle_t response_task_handle = NULL;
 TaskHandle_t send_info_task_handle = NULL;
 TaskHandle_t adc_task_handle = NULL;
-TaskHandle_t pwm_def_handle = NULL;
+TaskHandle_t pwm_def_task_handle = NULL;
 
 static inline void print(char *_data);
 
@@ -67,11 +67,11 @@ void main_task(void *pvParameters)
 	for (;;)
 	{
 		// Get pwm_2 only after 10sec. waiting
-				if (SysTime > 10U && _mode != pwm_input)
-				{
-					set_pwm(pwm_2, 10);
-					enable_pwm(pwm_2);
-				}
+		if (SysTime > 10U && _mode != pwm_input && pwm_def_task_handle == NULL)
+		{
+			set_pwm(pwm_2, 10);
+			enable_pwm(pwm_2);
+		}
 		// If stop request isn't received more than _diff_time_stop_responce -> then suspend responce task
 		if (SysTime - _begin_responce_task > _diff_time_stop_responce)
 		{
@@ -87,6 +87,7 @@ void main_task(void *pvParameters)
 		if (SysTime - _last_capture_time > _edge_capture_val)
 		{ // Check edge states of lilne (connected to Vss or Vdd)
 			disable_pwm(pwm_1);
+			set_pwm(pwm_2, 10U);
 		}
 
 		// If new sample is loaded into queue => parse it
@@ -155,19 +156,42 @@ void main_task(void *pvParameters)
 			{
 				if (_pwm_measured < 11U)
 				{
+					// Set filling on PB1
 					set_pwm(pwm_1, 0U);
-				}
-				else if (_pwm_measured < 41U)
-				{
-					set_pwm(pwm_1, 30U);
-				}
-				else if (_pwm_measured < 81U)
-				{
-					set_pwm(pwm_1, 50U);
+					// Set filling on PA0
+					if (NULL != pwm_def_task_handle)
+					{
+						vTaskSuspend(pwm_def_task_handle);
+						set_pwm(pwm_2, 0U);
+					}
 				}
 				else
 				{
-					set_pwm(pwm_1, 80U);
+					// Def pwm filling value on PA0
+					if (NULL == pwm_def_task_handle)
+					{
+						if (pdPASS == xTaskCreate(pwm_def_task, "pwm_def_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2, &pwm_def_task_handle))
+						{
+							__NOP();
+						}
+					}
+					else
+					{
+						vTaskResume(pwm_def_task_handle);
+					}
+					// Def pwm_12 value
+					if (_pwm_measured < 41U)
+					{
+						set_pwm(pwm_1, 30U);
+					}
+					else if (_pwm_measured < 81U)
+					{
+						set_pwm(pwm_1, 50U);
+					}
+					else
+					{
+						set_pwm(pwm_1, 80U);
+					}
 				}
 				enable_pwm(pwm_1);
 			}
@@ -201,8 +225,9 @@ void main_task(void *pvParameters)
 			{
 				vTaskSuspend(response_task_handle);
 			}
-			else{
-				//TODO: Add msg about unstarted task
+			else
+			{
+				// TODO: Add msg about unstarted task
 			}
 			_mode = undef;
 			break;

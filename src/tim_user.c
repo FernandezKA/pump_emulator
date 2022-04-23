@@ -8,7 +8,7 @@ void set_pwm(enum ePWM channel, uint8_t fill)
 	}
 	else if (pwm_2 == channel)
 	{
-		//timer_channel_output_pulse_value_config(TIMER2, TIMER_CH_3, 10 * fill - 1U);
+		timer_channel_output_pulse_value_config(TIMER1, TIMER_CH_0, 10 * fill - 1U);
 	}
 	else
 	{
@@ -24,7 +24,7 @@ void enable_pwm(enum ePWM channel)
 	}
 	else if (pwm_2 == channel)
 	{
-		//TIMER_CHCTL2(TIMER2) |= TIMER_CHCTL2_CH3EN;
+		TIMER_CHCTL2(TIMER1) |= TIMER_CHCTL2_CH0EN;
 	}
 	else
 	{
@@ -39,7 +39,7 @@ void disable_pwm(enum ePWM channel)
 	}
 	else if (pwm_2 == channel)
 	{
-		//TIMER_CHCTL2(TIMER2) &= ~TIMER_CHCTL2_CH3EN;
+		TIMER_CHCTL2(TIMER1) &= ~TIMER_CHCTL2_CH0EN;
 	}
 	else
 	{
@@ -59,7 +59,7 @@ bool get_pwm_state(enum ePWM channel)
 	}
 	else if (pwm_2 == channel)
 	{
-		if ((TIMER_CHCTL2(TIMER2) & TIMER_CHCTL2_CH3EN) == TIMER_CHCTL2_CH3EN)
+		if ((TIMER_CHCTL2(TIMER1) & TIMER_CHCTL2_CH0EN) == TIMER_CHCTL2_CH0EN)
 		{
 			state = true;
 		}
