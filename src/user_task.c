@@ -64,13 +64,15 @@ void main_task(void *pvParameters)
 	set_pwm(pwm_1, 0x0AU);
 	enable_pwm(pwm_1);
 
+	static bool pwm_enable_once = false;
 	for (;;)
 	{
 		// Get pwm_2 only after 10sec. waiting
-		if (SysTime > 10U && _mode != pwm_input && pwm_def_task_handle == NULL)
+		if (SysTime > 10U && _mode != pwm_input && pwm_def_task_handle == NULL && !pwm_enable_once)
 		{
 			set_pwm(pwm_2, 10);
 			enable_pwm(pwm_2);
+			pwm_enable_once = true;
 		}
 		// If stop request isn't received more than _diff_time_stop_responce -> then suspend responce task
 		if (SysTime - _begin_responce_task > _diff_time_stop_responce)
@@ -87,7 +89,7 @@ void main_task(void *pvParameters)
 		if (SysTime - _last_capture_time > _edge_capture_val)
 		{ // Check edge states of lilne (connected to Vss or Vdd)
 			disable_pwm(pwm_1);
-			set_pwm(pwm_2, 10U);
+			disable_pwm(pwm_2);
 		}
 
 		// If new sample is loaded into queue => parse it
@@ -162,7 +164,7 @@ void main_task(void *pvParameters)
 					if (NULL != pwm_def_task_handle)
 					{
 						vTaskSuspend(pwm_def_task_handle);
-						set_pwm(pwm_2, 0U);
+						set_pwm(pwm_2, 10U);
 					}
 				}
 				else
@@ -194,6 +196,7 @@ void main_task(void *pvParameters)
 					}
 				}
 				enable_pwm(pwm_1);
+				enable_pwm(pwm_2);
 			}
 			else
 			{

@@ -5,13 +5,13 @@ void _clk_init(void)
   RCU_APB2EN |= RCU_APB2EN_PAEN | RCU_APB2EN_PBEN | RCU_APB2EN_PCEN;
   RCU_APB2EN |= RCU_APB2EN_USART0EN;
   RCU_APB2EN |= RCU_APB2EN_TIMER0EN | RCU_APB1EN_TIMER1EN;
-	RCU_APB2EN |= RCU_APB2EN_ADC0EN;
-	
-	RCU_APB1EN |= RCU_APB1EN_TIMER1EN;
+  RCU_APB2EN |= RCU_APB2EN_ADC0EN;
+
+  RCU_APB1EN |= RCU_APB1EN_TIMER1EN;
   RCU_APB1EN |= RCU_APB1EN_TIMER2EN;
   RCU_APB1EN |= RCU_APB1EN_TIMER3EN;
-	
-	rcu_adc_clock_config(RCU_CKADC_CKAPB2_DIV8);
+
+  rcu_adc_clock_config(RCU_CKADC_CKAPB2_DIV8);
 }
 
 void _gpio_init(void)
@@ -19,18 +19,17 @@ void _gpio_init(void)
   gpio_init(GPIOC, GPIO_MODE_OUT_OD, GPIO_OSPEED_10MHZ, GPIO_PIN_13);     // It's led for indicate activity
   gpio_init(GPIOA, GPIO_MODE_IN_FLOATING, GPIO_OSPEED_50MHZ, GPIO_PIN_0); // input signal
   gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_11);     // signal response
-  gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_0);       // inverted state for input caapture signal
+  gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_0);      // inverted state for input caapture signal
   gpio_init(GPIOB, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_1);       // PWM_12, TIM3_CH3
-	gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_0);       // PWM_OUT, PA0
-	
-	gpio_init(GPIOA, GPIO_MODE_AIN, GPIO_OSPEED_50MHZ, GPIO_PIN_2);       // ADC0_CH2
-	gpio_init(GPIOA, GPIO_MODE_AIN, GPIO_OSPEED_50MHZ, GPIO_PIN_3);       // ADC0_CH3
-	
-	gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_2);//NSS_0
-	gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_10);//NSS_1
-	gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_7); //SDI
-	gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_5); //SCK
-	
+  gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_0);       // PWM_OUT, PA0
+
+  gpio_init(GPIOA, GPIO_MODE_AIN, GPIO_OSPEED_50MHZ, GPIO_PIN_2); // ADC0_CH2
+  gpio_init(GPIOA, GPIO_MODE_AIN, GPIO_OSPEED_50MHZ, GPIO_PIN_3); // ADC0_CH3
+
+  gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_2);  // NSS_0
+  gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_10); // NSS_1
+  gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_7);  // SDI
+  gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_5);  // SCK
 }
 
 void _usart_init(void)
@@ -112,7 +111,7 @@ void _tim1_init(void)
   timer_ocintpara.outputnstate = TIMER_CCXN_DISABLE;
   timer_ocintpara.ocidlestate = TIMER_OC_IDLE_STATE_LOW;
   timer_ocintpara.ocnidlestate = TIMER_OCN_IDLE_STATE_LOW;
-	
+
   timer_channel_output_config(TIMER1, TIMER_CH_0, &timer_ocintpara);
 
   /* CH0 configuration in PWM mode1,duty cycle 75% */
@@ -124,7 +123,7 @@ void _tim1_init(void)
   timer_auto_reload_shadow_enable(TIMER1);
   /* auto-reload preload enable */
   timer_enable(TIMER1);
-	disable_pwm(pwm_2);
+  disable_pwm(pwm_2);
 }
 
 void _tim2_init(void)
@@ -153,7 +152,7 @@ void _tim2_init(void)
   timer_ocintpara.ocidlestate = TIMER_OC_IDLE_STATE_LOW;
   timer_ocintpara.ocnidlestate = TIMER_OCN_IDLE_STATE_LOW;
 
-//  timer_channel_output_config(TIMER2, TIMER_CH_2, &timer_ocintpara);
+  //  timer_channel_output_config(TIMER2, TIMER_CH_2, &timer_ocintpara);
   timer_channel_output_config(TIMER2, TIMER_CH_3, &timer_ocintpara);
 
   /* CH3 configuration in PWM mode1,duty cycle 75% */
@@ -178,11 +177,11 @@ void _tim3_init(void)
 
 void _adc_init(void)
 {
-	adc_deinit(ADC0);
-	adc_mode_config(ADC_MODE_FREE);
-	adc_data_alignment_config(ADC0, ADC_DATAALIGN_RIGHT); //LSB alignment
-	adc_regular_channel_config(ADC0,0, ADC_CHANNEL_2, ADC_SAMPLETIME_1POINT5);  //WHAT IS RANK??? (0 value)
-	adc_enable(ADC0);
+  adc_deinit(ADC0);
+  adc_mode_config(ADC_MODE_FREE);
+  adc_data_alignment_config(ADC0, ADC_DATAALIGN_RIGHT);                       // LSB alignment
+  adc_regular_channel_config(ADC0, 0, ADC_CHANNEL_2, ADC_SAMPLETIME_1POINT5); // WHAT IS RANK??? (0 value)
+  adc_enable(ADC0);
 }
 
 void _nvic_enable(void)
