@@ -4,7 +4,7 @@ void set_pwm(enum ePWM channel, uint8_t fill)
 {
 	if (pwm_1 == channel)
 	{
-		timer_channel_output_pulse_value_config(TIMER2, TIMER_CH_2, 10 * fill - 1U);
+		timer_channel_output_pulse_value_config(TIMER2, TIMER_CH_3, 10 * fill - 1U);
 	}
 	else if (pwm_2 == channel)
 	{

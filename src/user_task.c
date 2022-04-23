@@ -24,7 +24,7 @@ void ad8400_0_task(void *pvParameters)
 	uint8_t res_value = 0x00U;
 	for (;;)
 	{
-		vTaskDelay(pdMS_TO_TICKS(10));
+		vTaskDelay(pdMS_TO_TICKS(1000));
 		_AD8400_set(res_value++, 0);
 	}
 }
@@ -34,7 +34,7 @@ void ad8400_1_task(void *pvParameters)
 	uint8_t res_value = 0x00U;
 	for (;;)
 	{
-		vTaskDelay(pdMS_TO_TICKS(10));
+		vTaskDelay(pdMS_TO_TICKS(1000));
 		_AD8400_set(res_value++, 1);
 	}
 }
@@ -61,42 +61,39 @@ void main_task(void *pvParameters)
 	const static uint32_t _edge_capture_val = 0x0AU;
 	// This variable for input measured pwm_value
 	static uint8_t _pwm_measured = 0x00U;
-	disable_pwm(pwm_1);
+	set_pwm(pwm_1, 0x0AU);
+	enable_pwm(pwm_1);
 
 	for (;;)
 	{
-		// Get pwm only after 10sec. waiting
-				if (SysTime > 2U)
-		{
-			set_pwm(pwm_1, 10);
-			enable_pwm(pwm_1);
-		}
-		
-//		if (SysTime > 10U && _mode != pwm_input)
-//		{
-//			set_pwm(pwm_1, 10);
-//			enable_pwm(pwm_1);
-//		}
+		// Get pwm_2 only after 10sec. waiting
+		//		if (SysTime > 10U && _mode != pwm_input)
+		//		{
+		//			set_pwm(pwm_2, 10);
+		//			enable_pwm(pwm_2);
+		//		}
 		// If stop request isn't received more than _diff_time_stop_responce -> then suspend responce task
 		if (SysTime - _begin_responce_task > _diff_time_stop_responce)
 		{
-			vTaskSuspend(response_task_handle);
+			//vTaskSuspend(response_task_handle);
 			_begin_responce_task = 0x00U;
 		}
+
 		// If state of line isn't different more then _edge_cap_val, then detect error
 		if (SysTime - _last_capture_time > _edge_capture_val)
 		{ // Check edge states of lilne (connected to Vss or Vdd)
-			set_pwm(pwm_1, 0);
+			disable_pwm(pwm_1);
 		}
+
 		// If new sample is loaded into queue => parse it
 		if (pdPASS == xQueueReceive(cap_signal, &_tmp_pulse, 0)) // Check capture signal
 		{
 			_last_capture_time = SysTime;
 			// Divide by 3 groups - with knowledge timings
-			if (_tmp_pulse.time < 100) // PWM case
+			if (_tmp_pulse.time < 120) // PWM case
 			{
-				__NOP();
 				_mode = pwm_input;
+				enable_pwm(pwm_1);
 			}
 			else if (_tmp_pulse.time > 100 && _tmp_pulse.time < 500) // Request start detect
 			{
@@ -146,7 +143,6 @@ void main_task(void *pvParameters)
 			}
 		}
 
-		// Get actions for parsed signal state
 		switch (_mode)
 		{
 		case pwm_input:
@@ -169,6 +165,7 @@ void main_task(void *pvParameters)
 				{
 					set_pwm(pwm_1, 80U);
 				}
+				enable_pwm(pwm_1);
 			}
 			else
 			{
@@ -178,26 +175,28 @@ void main_task(void *pvParameters)
 			break;
 
 		case start_input:
-			if(pdPASS != xTaskCreate(response_task, "responce_tesk", configMINIMAL_STACK_SIZE,NULL, tskIDLE_PRIORITY + 1, &response_task_handle)){
-				ERROR_HANDLER();
-			}
-			//vTaskResume(response_task_handle); // Begin generation responce for start request
+			//				if (pdPASS != xTaskCreate(response_task, "responce_tesk", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &response_task_handle))
+			//				{
+			//					ERROR_HANDLER();
+			//				}
+			// vTaskResume(response_task_handle); // Begin generation responce for start request
 			_valid_index = 0x00U;
 			_begin_responce_task = SysTime;
 			_mode = undef;
 			break;
 
 		case stop_input:
-			vTaskDelete(response_task_handle);
-			//vTaskSuspend(response_task_handle); // Suspend responce_task (TODO: delete for free space)
+			// vTaskDelete(response_task_handle);
+			//  vTaskSuspend(response_task_handle); // Suspend responce_task (TODO: delete for free space)
 			_mode = undef;
 			break;
 
 		case undef:
-
+			__NOP();
 			break;
 		}
-		vTaskDelay(pdMS_TO_TICKS(5)); // Get answering timings
+
+		vTaskDelay(pdMS_TO_TICKS(1)); // Get answering timings
 	}
 }
 
@@ -215,40 +214,40 @@ void sample_task(void *pvParameters)
 
 	for (;;)
 	{
-		//Get pwm filling value
-			if (_samples_pwm_index < 1999U)
-			{ // Get pwm measuring at 2 seconds
+		// Get pwm filling value
+		if (_samples_pwm_index < 1999U)
+		{ // Get pwm measuring at 2 seconds
 
-				if((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN)
-				{
-					++_samples_pwm;
-					++_samples_pwm_index;
-				}
-				else
-				{
-					++_samples_pwm_index;
-				}
+			if ((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN)
+			{
+				++_samples_pwm;
+				++_samples_pwm_index;
 			}
 			else
 			{
-				pwm_fill = (_samples_pwm * 100U) / _samples_pwm_index;
-				_samples_pwm_index = 0x00U;
-				_samples_pwm = 0x00U;
-				xQueueSendToBack(pwm_value, &pwm_fill, 0);
+				++_samples_pwm_index;
 			}
-			
-			//Simplest time counter with inc. time = 1 sec
-			if (_intSysCounter == 999U)
-			{
-				_intSysCounter = 0x00U;
-				++SysTime;
-			}
-			else
-			{
-				++_intSysCounter;
-			}
-		//Detect type of input signal
-		// Upd variables
+		}
+		else
+		{
+			pwm_fill = (_samples_pwm * 100U) / _samples_pwm_index;
+			_samples_pwm_index = 0x00U;
+			_samples_pwm = 0x00U;
+			xQueueSendToBack(pwm_value, &pwm_fill, 0);
+		}
+
+		// Simplest time counter with inc. time = 1 sec
+		if (_intSysCounter == 999U)
+		{
+			_intSysCounter = 0x00U;
+			++SysTime;
+		}
+		else
+		{
+			++_intSysCounter;
+		}
+		// Detect type of input signal
+		//  Upd variables
 		last_state = curr_state;
 		++sysTick;
 		// Sample input signal
@@ -268,7 +267,7 @@ void sample_task(void *pvParameters)
 		else
 		{
 			// Send pulse on queue,will be received on main process
-			xQueueSendToBack(cap_signal, &((struct pulse){.state = curr_state, .time = time_val}), 0); 
+			xQueueSendToBack(cap_signal, &((struct pulse){.state = curr_state, .time = time_val}), 0);
 			isCapture = true;
 			// Repeat input signal with inversion on PA0
 			if (curr_state)
@@ -281,7 +280,7 @@ void sample_task(void *pvParameters)
 			}
 			time_val = 0x00U;
 		}
-		
+
 		// LED activity, blink every second
 		if ((sysTick % 500) == 0U)
 		{
