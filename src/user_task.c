@@ -75,7 +75,11 @@ void main_task(void *pvParameters)
 		// If stop request isn't received more than _diff_time_stop_responce -> then suspend responce task
 		if (SysTime - _begin_responce_task > _diff_time_stop_responce)
 		{
-			//vTaskSuspend(response_task_handle);
+			if (NULL != response_task_handle)
+			{
+				vTaskSuspend(response_task_handle);
+			}
+			// vTaskDelete( NULL );
 			_begin_responce_task = 0x00U;
 		}
 
@@ -175,18 +179,28 @@ void main_task(void *pvParameters)
 			break;
 
 		case start_input:
-			//				if (pdPASS != xTaskCreate(response_task, "responce_tesk", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &response_task_handle))
-			//				{
-			//					ERROR_HANDLER();
-			//				}
-			// vTaskResume(response_task_handle); // Begin generation responce for start request
+			if (NULL == response_task_handle)
+			{
+				if (pdPASS != xTaskCreate(response_task, "responce_tesk", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2, &response_task_handle))
+				{
+					// ERROR_HANDLER();
+					__NOP();
+				}
+			}
+			else
+			{
+				vTaskResume(response_task_handle);
+			}
 			_valid_index = 0x00U;
 			_begin_responce_task = SysTime;
 			_mode = undef;
 			break;
 
 		case stop_input:
-			// vTaskDelete(response_task_handle);
+			if (NULL != response_task_handle)
+			{
+				vTaskDelete(response_task_handle);
+			}
 			//  vTaskSuspend(response_task_handle); // Suspend responce_task (TODO: delete for free space)
 			_mode = undef;
 			break;
