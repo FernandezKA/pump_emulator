@@ -61,6 +61,9 @@ void main_task(void *pvParameters)
 	const static uint32_t _edge_capture_val = 0x02U;
 	// This variable for input measured pwm_value
 	static uint8_t _pwm_measured = 0x00U;
+	//For value from ADC
+	
+	
 	set_pwm(pwm_1, 0x0AU);
 	enable_pwm(pwm_1);
 
@@ -239,7 +242,6 @@ void main_task(void *pvParameters)
 			__NOP();
 			break;
 		}
-
 		vTaskDelay(pdMS_TO_TICKS(1)); // Get answering timings
 	}
 }
