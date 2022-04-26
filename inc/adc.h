@@ -29,13 +29,16 @@ uint16_t u16ADC_Get_Mean(adc_simple* xADC);
 void vAddSample(adc_simple* xADC, uint16_t _value);
 bool bAdd_value(adc_simple* xADC, uint16_t _value);
 uint8_t u8Shift_Value(shift_reg* xShift, uint8_t _value);
+void vShiftInit(shift_reg* xReg);
 
 
 //For hardware part of device
 void adc_select_channel(uint8_t ch_num);
-
 uint8_t adc_get_channel(void);
-
 uint16_t adc_get_result(void);
+
+//ADC conversion 
+
+uint8_t u8GetConversionValue(uint16_t _adc);
 
 #endif

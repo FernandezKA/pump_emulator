@@ -92,3 +92,21 @@ uint8_t u8Shift_Value(shift_reg* xShift, uint8_t _value){
 	}
 }
 
+void vShiftInit(shift_reg* xReg){
+	xReg->_isFirst = true;
+}
+
+//ADC conversion 
+
+uint8_t u8GetConversionValue(uint16_t _adc){
+	static float _result = 0; 
+	static uint16_t adc;
+	adc = _adc & 0x3FFU;
+	_result = 0.28 * adc * adc + 3.66 * adc + 37.49;
+	return _result;
+}
+
+void vSimpleADC_Init(adc_simple* xADC){
+		xADC->isFirst = true;
+		xADC->countSample = 0x00U;
+}

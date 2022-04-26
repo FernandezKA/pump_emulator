@@ -22,10 +22,17 @@ resistance with discrete timing, when defined by user
 void ad8400_0_task(void *pvParameters)
 {
 	uint8_t res_value = 0x00U;
+	
+	static shift_reg reg; 
+	static adc_simple _adc;
+	vShiftInit(&reg);
+	vSimpleADC_Init(&_adc);
+	
 	for (;;)
 	{
-		vTaskDelay(pdMS_TO_TICKS(1000));
-		_AD8400_set(res_value++, 0);
+		
+		vTaskDelay(pdMS_TO_TICKS(100));
+		//_AD8400_set(res_value++, 0);
 	}
 }
 
@@ -34,8 +41,8 @@ void ad8400_1_task(void *pvParameters)
 	uint8_t res_value = 0x00U;
 	for (;;)
 	{
-		vTaskDelay(pdMS_TO_TICKS(1000));
-		_AD8400_set(res_value++, 1);
+		vTaskDelay(pdMS_TO_TICKS(100));
+		//_AD8400_set(res_value++, 1);
 	}
 }
 
