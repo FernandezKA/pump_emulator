@@ -362,7 +362,7 @@ void response_task(void *pvParameters)
 	}
 }
 
-// TODO: delete, and use global variable for more effective using of memory
+// TODO: delete, and use global variable for more effective using of memory\
 //  This task send info message to USART
 void send_info_task(void *pvParameters)
 {
