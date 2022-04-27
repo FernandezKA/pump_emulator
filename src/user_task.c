@@ -21,17 +21,58 @@ static inline void print(char *_data);
 resistance with discrete timing, when defined by user
 void ad8400_0_task(void *pvParameters)
 {
+	#define sample_time 10U
 	uint8_t res_value = 0x00U;
-	
-	static shift_reg reg; 
+	static shift_reg reg; //shift register for delay buffer
 	static adc_simple _adc;
+	static adc_state _eStateADC = not_measured;
+	static uint16_t _u16Measure = 0x00U;
+	static uint16_t _u16NewConversion = 0x00U;
 	vShiftInit(&reg);
 	vSimpleADC_Init(&_adc);
 	
 	for (;;)
 	{
+		//Get new measure
 		
-		vTaskDelay(pdMS_TO_TICKS(100));
+		if(_adc.isFirst){//Get mark voltage on bus
+			switch(_eStateADC){
+				case not_measured:
+						vAddSample(&_adc, _u16Measure);
+					if(_adc.countSample == 0x0A){//Get 1 sec. measure
+						static uint16_t _u16Mean = 0x00U;
+						//Detect bus state
+						if(_u16Mean < 0x10U){
+							_eStateADC = error;
+						}
+						else if(_u16Mean > 0xF0U){
+							_eStateADC = error;
+						}
+						else{
+							_eStateADC = measured;
+						}
+					}
+				break;
+				
+				case measured:
+					//Get action with shift register
+				_u16NewConversion = u8GetConversionValue(0x3FFFU);//TODO: this used fixedd value for test, after add value from ADC
+				_AD8400_set(u8Shift_Value(&reg, _u16NewConversion), 0);
+					
+				break;
+				
+				case error:
+					//Reset flags of state
+					_eStateADC = not_measured;
+					vSimpleADC_Init(&_adc);
+					vTaskDelay(pdMS_TO_TICKS(1000U));//Wait 1 sec. for new measure, then repeat again
+				break;
+			}
+		}
+		else{//Get value into the shift register
+			
+		}
+		vTaskDelay(pdMS_TO_TICKS(sample_time));
 		//_AD8400_set(res_value++, 0);
 	}
 }
