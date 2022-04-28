@@ -19,6 +19,7 @@
 #include "tim_user.h"
 #include "adc.h"
 #include "spi.h"
+#include "usart.h"
 
 void ERROR_HANDLER(void);
 

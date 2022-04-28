@@ -15,64 +15,82 @@ TaskHandle_t send_info_task_handle = NULL;
 TaskHandle_t adc_task_handle = NULL;
 TaskHandle_t pwm_def_task_handle = NULL;
 
-static inline void print(char *_data);
-
 // This task used for definition AD8400 \
 resistance with discrete timing, when defined by user
 void ad8400_0_task(void *pvParameters)
 {
-	#define sample_time 10U
+#define sample_time 10U
 	uint8_t res_value = 0x00U;
-	static shift_reg reg; //shift register for delay buffer
+	static shift_reg reg; // shift register for delay buffer
 	static adc_simple _adc;
 	static adc_state _eStateADC = not_measured;
 	static uint16_t _u16Measure = 0x00U;
-	static uint16_t _u16NewConversion = 0x00U;
+	static uint8_t _u8NewConversion = 0x00U;
+	static uint16_t _emul_ADC = 0x00U;
+
+	// For LF filter for measure
+	static uint16_t mean_adc;
+	static uint32_t sum_adc = 0x00U;
+	static uint8_t counter_adc = 0x00U;
+
 	vShiftInit(&reg);
 	vSimpleADC_Init(&_adc);
-	
+
 	for (;;)
 	{
-		//Get new measure
-		
-		if(_adc.isFirst){//Get mark voltage on bus
-			switch(_eStateADC){
-				case not_measured:
-						vAddSample(&_adc, _u16Measure);
-					if(_adc.countSample == 0x0A){//Get 1 sec. measure
-						static uint16_t _u16Mean = 0x00U;
-						//Detect bus state
-						if(_u16Mean < 0x10U){
-							_eStateADC = error;
-						}
-						else if(_u16Mean > 0xF0U){
-							_eStateADC = error;
-						}
-						else{
-							_eStateADC = measured;
-						}
+		// Get new measure
+
+		if (_adc.isFirst)
+		{ // Get mark voltage on bus
+			switch (_eStateADC)
+			{
+			case not_measured:
+				vAddSample(&_adc, _u16Measure);
+				if (_adc.countSample == 0x0A)
+				{ // Get 1 sec. measure
+					static uint16_t _u16Mean = 0x00U;
+					// Detect bus state
+					if (_u16Mean < 0xD9U)
+					{
+						_eStateADC = error;
 					}
+					else if (_u16Mean > 0x54U)
+					{
+						_eStateADC = error;
+					}
+					else
+					{
+						_eStateADC = measured;
+					}
+				}
+				vTaskDelay(pdMS_TO_TICKS(100U));
 				break;
-				
-				case measured:
-					//Get action with shift register
-				_u16NewConversion = u8GetConversionValue(0x3FFFU);//TODO: this used fixedd value for test, after add value from ADC
-				_AD8400_set(u8Shift_Value(&reg, _u16NewConversion), 0);
-					
+
+			case measured://From this state we can get out only with reset
+				// Get action with shift register
+				if (bGetMeanValue(&sum_adc, &mean_adc, &counter_adc, _emul_ADC++))
+				{														  // 10 samples is received
+					_u8NewConversion = u8GetConversionValue(mean_adc); // TODO: this used fixedd value for test, after add value from ADC
+					_AD8400_set(u8Shift_Value(&reg, _u8NewConversion), 0);
+				}
+				else
+				{ // Wait new sample
+					__NOP();//For debug
+				}
+				vTaskDelay(pdMS_TO_TICKS(100U)); //100 ms * 10 samples = 1 sec from measure to measure
 				break;
-				
-				case error:
-					//Reset flags of state
-					_eStateADC = not_measured;
-					vSimpleADC_Init(&_adc);
-					vTaskDelay(pdMS_TO_TICKS(1000U));//Wait 1 sec. for new measure, then repeat again
+
+			case error:
+				// Reset flags of state
+				_eStateADC = not_measured;
+				vSimpleADC_Init(&_adc); //Reset all of parameters into measured simplest ADC
+				vTaskDelay(pdMS_TO_TICKS(1000U)); // Wait 1 sec. for new measure, then repeat again
 				break;
 			}
 		}
-		else{//Get value into the shift register
-			
+		else
+		{ // Get value into the shift register
 		}
-		vTaskDelay(pdMS_TO_TICKS(sample_time));
 		//_AD8400_set(res_value++, 0);
 	}
 }
@@ -109,9 +127,8 @@ void main_task(void *pvParameters)
 	const static uint32_t _edge_capture_val = 0x02U;
 	// This variable for input measured pwm_value
 	static uint8_t _pwm_measured = 0x00U;
-	//For value from ADC
-	
-	
+	// For value from ADC
+
 	set_pwm(pwm_1, 0x0AU);
 	enable_pwm(pwm_1);
 
@@ -148,7 +165,7 @@ void main_task(void *pvParameters)
 		{
 			_last_capture_time = SysTime;
 			// Divide by 3 groups - with knowledge timings
-			if (_tmp_pulse.time < 120) // PWM case
+			if (_tmp_pulse.time < 120) // PWM case //Why 120 ms?? F_pwm is 100Hz, T_pwm = 10 ms
 			{
 				_mode = pwm_input;
 				enable_pwm(pwm_1);

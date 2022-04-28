@@ -3,7 +3,7 @@
 QueueHandle_t pwm_value;
 QueueHandle_t cap_signal;
 QueueHandle_t sig_gen_flag;
-QueueHandle_t adc_0_val; 
+QueueHandle_t adc_0_val;
 QueueHandle_t adc_1_val;
 
 bool isCapture = false;

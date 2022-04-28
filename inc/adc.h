@@ -2,6 +2,8 @@
 #define _adc_h_
 #include "main.h"
 
+#define MEAN_NUMS 0x0AU
+
 enum _adc_state{
 	not_measured, 
 	measured,
@@ -41,4 +43,5 @@ uint16_t adc_get_result(void);
 
 uint8_t u8GetConversionValue(uint16_t _adc);
 
+bool bGetMeanValue(uint32_t* _sum, uint16_t* _mean, uint8_t* _counter, uint16_t _adc_val);
 #endif
