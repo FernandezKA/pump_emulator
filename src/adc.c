@@ -29,19 +29,12 @@ uint16_t adc_get_result(void)
 // Software used function
 uint16_t u16ADC_Get_Mean(adc_simple *xADC)
 {
-	if (xADC->isFirst)
-	{
-		return 0x00U;
-	}
-	else
-	{
 		static uint32_t _sum = 0x00U;
 		for (uint8_t i = 0; i < 0x0A; ++i)
 		{
 			_sum += xADC->adc_val[i];
 		}
 		return (uint16_t)_sum / 0x0AU;
-	}
 }
 void vAddSample(adc_simple *xADC, uint16_t _value)
 {

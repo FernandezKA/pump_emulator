@@ -11,7 +11,6 @@ TaskHandle_t ad8400_1_task_handle = NULL;
 TaskHandle_t main_task_handle = NULL;
 TaskHandle_t sample_task_handle = NULL;
 TaskHandle_t response_task_handle = NULL;
-TaskHandle_t send_info_task_handle = NULL;
 TaskHandle_t adc_task_handle = NULL;
 TaskHandle_t pwm_def_task_handle = NULL;
 
@@ -32,14 +31,15 @@ void ad8400_0_task(void *pvParameters)
 	static uint16_t mean_adc;
 	static uint32_t sum_adc = 0x00U;
 	static uint8_t counter_adc = 0x00U;
-
+	static uint16_t _u16Mean = 0x00U;
+	adc_select_channel(0x02U);
 	vShiftInit(&reg);
 	vSimpleADC_Init(&_adc);
 
 	for (;;)
 	{
 		// Get new measure
-
+		_u16Measure = adc_regular_data_read(ADC0);;
 		if (_adc.isFirst)
 		{ // Get mark voltage on bus
 			switch (_eStateADC)
@@ -48,7 +48,7 @@ void ad8400_0_task(void *pvParameters)
 				vAddSample(&_adc, _u16Measure);
 				if (_adc.countSample == 0x0A)
 				{ // Get 1 sec. measure
-					static uint16_t _u16Mean = 0x00U;
+					_u16Mean = u16ADC_Get_Mean(&_adc);
 					// Detect bus state
 					if (_u16Mean < 0xD9U)
 					{
@@ -68,7 +68,7 @@ void ad8400_0_task(void *pvParameters)
 
 			case measured://From this state we can get out only with reset
 				// Get action with shift register
-				if (bGetMeanValue(&sum_adc, &mean_adc, &counter_adc, _emul_ADC++))
+				if (bGetMeanValue(&sum_adc, &mean_adc, &counter_adc, _u16Measure))
 				{														  // 10 samples is received
 					_u8NewConversion = u8GetConversionValue(mean_adc); // TODO: this used fixedd value for test, after add value from ADC
 					_AD8400_set(u8Shift_Value(&reg, _u8NewConversion), 0);
@@ -427,19 +427,6 @@ void response_task(void *pvParameters)
 	}
 }
 
-// TODO: delete, and use global variable for more effective using of memory\
-//  This task send info message to USART
-void send_info_task(void *pvParameters)
-{
-
-	char _msg[0xFFU];
-	uint8_t _arr_ptr = 0x00U;
-	for (;;)
-	{
-
-		vTaskDelay(pdMS_TO_TICKS(100));
-	}
-}
 
 // This task used for answering value from ADC
 void adc_task(void *pvParameters)
