@@ -34,13 +34,13 @@ uint16_t u16ADC_Get_Mean(adc_simple *xADC)
 		{
 			_sum += xADC->adc_val[i];
 		}
-		return (uint16_t)_sum / 0x0AU;
+		return (uint16_t) (_sum / 0x0AU);
 }
 void vAddSample(adc_simple *xADC, uint16_t _value)
 {
-	if (xADC->countSample < 0x0A)
+	if (xADC->countSample < 0x0BU)
 	{
-		xADC->adc_val[xADC->countSample++] = _value;
+		xADC->adc_val[xADC->countSample++ - 1U] = _value;
 	}
 	else
 	{

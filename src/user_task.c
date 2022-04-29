@@ -46,10 +46,10 @@ void ad8400_0_task(void *pvParameters)
 			{
 			case not_measured:
 				vAddSample(&_adc, _u16Measure);
-				if (_adc.countSample == 0x0A)
+				if (_adc.countSample == 0x0B)
 				{ // Get 1 sec. measure
-					//_u16Mean = u16ADC_Get_Mean(&_adc);
-					_u16Mean = _u16Measure;
+					_u16Mean = u16ADC_Get_Mean(&_adc);
+					//_u16Mean = _u16Measure;
 					static uint16_t lowVoltage;
 					lowVoltage = _from_voltage(0.5);
 					// Detect bus state
