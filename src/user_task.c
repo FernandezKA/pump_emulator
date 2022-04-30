@@ -161,7 +161,8 @@ void main_task(void *pvParameters)
 		if (SysTime - _last_capture_time > _edge_capture_val)
 		{ // Check edge states of lilne (connected to Vss or Vdd)
 			disable_pwm(pwm_1);
-			disable_pwm(pwm_2);
+			set_pwm(pwm_2, 10U);
+			//disable_pwm(pwm_2);
 		}
 	/***********************************************************************************************/
 		// If new sample is loaded into queue => parse it
@@ -226,6 +227,16 @@ void main_task(void *pvParameters)
 		{
 		case pwm_input:
 			_mode = undef; // reset state for next capture
+					// Repeat input signal with inversion on PA0
+			if ((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN)
+			{
+				GPIO_OCTL(INV_PORT) &= ~INV_PIN;
+			}
+			else
+			{
+				GPIO_OCTL(INV_PORT) |= INV_PIN;
+			}
+			/************************************************************/
 			if (pdPASS == xQueueReceive(pwm_value, &_pwm_measured, 0))
 			{
 				if (_pwm_measured < 11U)
@@ -267,7 +278,7 @@ void main_task(void *pvParameters)
 						set_pwm(pwm_1, 80U);
 					}
 					if(pwm_enable_once){
-					enable_pwm(pwm_2);
+					enable_pwm(pwm_1);
 					}
 				}
 			}
@@ -279,6 +290,9 @@ void main_task(void *pvParameters)
 			break;
 
 		case start_input:
+				set_pwm(pwm_1, 10U);
+				set_pwm(pwm_2, 10U);
+		
 			if (NULL == response_task_handle)
 			{
 				if (pdPASS != xTaskCreate(response_task, "responce_tesk", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2, &response_task_handle))
@@ -297,6 +311,9 @@ void main_task(void *pvParameters)
 			break;
 
 		case stop_input:
+				set_pwm(pwm_1, 10U);
+				set_pwm(pwm_2, 10U);	
+		
 			if (NULL != response_task_handle)
 			{
 				vTaskSuspend(response_task_handle);
@@ -388,15 +405,6 @@ void sample_task(void *pvParameters)
 			// Send pulse on queue,will be received on main process
 			xQueueSendToBack(cap_signal, &((struct pulse){.state = curr_state, .time = time_val}), 0);
 			isCapture = true;
-			// Repeat input signal with inversion on PA0
-			if (curr_state)
-			{
-				GPIO_OCTL(INV_PORT) &= ~INV_PIN;
-			}
-			else
-			{
-				GPIO_OCTL(INV_PORT) |= INV_PIN;
-			}
 			time_val = 0x00U;
 		}
 
