@@ -25,7 +25,6 @@ void ad8400_0_task(void *pvParameters)
 	static adc_state _eStateADC = not_measured;
 	static uint16_t _u16Measure = 0x00U;
 	static uint8_t _u8NewConversion = 0x00U;
-	static uint16_t _emul_ADC = 0x00U;
 
 	// For LF filter for measure
 	static uint16_t mean_adc;
@@ -49,9 +48,6 @@ void ad8400_0_task(void *pvParameters)
 				if (_adc.countSample == 0x0B)
 				{ // Get 1 sec. measure
 					_u16Mean = u16ADC_Get_Mean(&_adc);
-					//_u16Mean = _u16Measure;
-					static uint16_t lowVoltage;
-					lowVoltage = _from_voltage(0.5);
 					// Detect bus state
 					if (_u16Mean < _from_voltage(0.5))
 					{
@@ -111,6 +107,7 @@ void ad8400_1_task(void *pvParameters)
 // It's a main task. Detect input sequence, then get action with defined rules.
 void main_task(void *pvParameters)
 {
+	//Static variable for this task
 	static struct pulse _tmp_pulse;
 	static enum work_mode _mode;
 	static uint8_t _valid_index = 0x00U;
@@ -131,47 +128,58 @@ void main_task(void *pvParameters)
 	// This variable for input measured pwm_value
 	static uint8_t _pwm_measured = 0x00U;
 	// For value from ADC
-
 	set_pwm(pwm_1, 0x0AU);
 	enable_pwm(pwm_1);
-
 	static bool pwm_enable_once = false;
+/*************************************************************************************************
+ * ***********************************************************************************************
+ * ***********************************************************************************************/	
 	for (;;)
 	{
-		// Get pwm_2 only after 10sec. waiting
-		if (SysTime > 10U && _mode != pwm_input && pwm_def_task_handle == NULL && !pwm_enable_once)
-		{
-			set_pwm(pwm_2, 10);
+		if (SysTime > 10U && !pwm_enable_once){
+			set_pwm(pwm_2, 10U);
+			set_pwm(pwm_1, 10U);
+			enable_pwm(pwm_1);
 			enable_pwm(pwm_2);
 			pwm_enable_once = true;
 		}
-		// If stop request isn't received more than _diff_time_stop_responce -> then suspend responce task
+		// Get pwm_2 only after 10sec. waiting
+//		if (SysTime > 10U && _mode != pwm_input && pwm_def_task_handle == NULL && !pwm_enable_once)
+//		{
+//			set_pwm(pwm_1, 10U);
+//			set_pwm(pwm_2, 10U);
+//			enable_pwm(pwm_1);
+//			enable_pwm(pwm_2);
+//		}
+		// If stop request isn't received more then _diff_time_stop_responce -> get suspend responce task
 		if (SysTime - _begin_responce_task > _diff_time_stop_responce)
 		{
 			if (NULL != response_task_handle)
 			{
 				vTaskSuspend(response_task_handle);
+				GPIO_OCTL(RESPONSE_PORT) &= ~RESPONSE_PIN;//RESET PIN TO LOW STATE
 			}
-			// vTaskDelete( NULL );
 			_begin_responce_task = 0x00U;
 		}
-
+/*************************************************************************************************
+ * ***********************************************************************************************
+ * ***********************************************************************************************/
 		// If state of line isn't different more then _edge_cap_val, then detect error
 		if (SysTime - _last_capture_time > _edge_capture_val)
 		{ // Check edge states of lilne (connected to Vss or Vdd)
 			disable_pwm(pwm_1);
 			disable_pwm(pwm_2);
 		}
-
+	/***********************************************************************************************/
 		// If new sample is loaded into queue => parse it
 		if (pdPASS == xQueueReceive(cap_signal, &_tmp_pulse, 0)) // Check capture signal
 		{
 			_last_capture_time = SysTime;
 			// Divide by 3 groups - with knowledge timings
-			if (_tmp_pulse.time < 120) // PWM case //Why 120 ms?? F_pwm is 100Hz, T_pwm = 10 ms
+			if (_tmp_pulse.time < 12) // PWM case 
 			{
 				_mode = pwm_input;
-				enable_pwm(pwm_1);
+				//enable_pwm(pwm_1);
 			}
 			else if (_tmp_pulse.time > 100 && _tmp_pulse.time < 500) // Request start detect
 			{
@@ -220,7 +228,7 @@ void main_task(void *pvParameters)
 				}
 			}
 		}
-
+	/**********************************************************************************************/
 		switch (_mode)
 		{
 		case pwm_input:
@@ -266,8 +274,6 @@ void main_task(void *pvParameters)
 						set_pwm(pwm_1, 80U);
 					}
 				}
-				enable_pwm(pwm_1);
-				enable_pwm(pwm_2);
 			}
 			else
 			{
@@ -298,6 +304,7 @@ void main_task(void *pvParameters)
 			if (NULL != response_task_handle)
 			{
 				vTaskSuspend(response_task_handle);
+				GPIO_OCTL(RESPONSE_PORT) &= ~RESPONSE_PIN;//RESET PIN TO LOW STATE
 			}
 			else
 			{
@@ -313,7 +320,9 @@ void main_task(void *pvParameters)
 		vTaskDelay(pdMS_TO_TICKS(1)); // Get answering timings
 	}
 }
-
+/*************************************************************************************************
+ * ***********************************************************************************************
+ * ***********************************************************************************************/
 // This task answering request pin, and send samples into queue in main process. Also used for blink led
 void sample_task(void *pvParameters)
 {
@@ -403,7 +412,9 @@ void sample_task(void *pvParameters)
 		vTaskDelay(pdMS_TO_TICKS(1));
 	}
 }
-
+/*************************************************************************************************
+ * ***********************************************************************************************
+ * ***********************************************************************************************/
 // This task used for genrating responce signal at start request
 void response_task(void *pvParameters)
 {
@@ -430,7 +441,9 @@ void response_task(void *pvParameters)
 	}
 }
 
-
+/*************************************************************************************************
+ * ***********************************************************************************************
+ * ***********************************************************************************************/
 // This task used for answering value from ADC
 void adc_task(void *pvParameters)
 {
@@ -484,7 +497,9 @@ void adc_task(void *pvParameters)
 		}
 	}
 }
-
+/*************************************************************************************************
+ * ***********************************************************************************************
+ * ***********************************************************************************************/
 // This task used for more different pwm fillings forming (begin at detect pwm_fill on pwm_in)
 void pwm_def_task(void *pvParameters)
 {
