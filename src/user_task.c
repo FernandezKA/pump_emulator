@@ -136,6 +136,7 @@ void main_task(void *pvParameters)
  * ***********************************************************************************************/	
 	for (;;)
 	{
+		//First pwm enable
 		if (SysTime > 10U && !pwm_enable_once){
 			set_pwm(pwm_2, 10U);
 			set_pwm(pwm_1, 10U);
@@ -143,14 +144,6 @@ void main_task(void *pvParameters)
 			enable_pwm(pwm_2);
 			pwm_enable_once = true;
 		}
-		// Get pwm_2 only after 10sec. waiting
-//		if (SysTime > 10U && _mode != pwm_input && pwm_def_task_handle == NULL && !pwm_enable_once)
-//		{
-//			set_pwm(pwm_1, 10U);
-//			set_pwm(pwm_2, 10U);
-//			enable_pwm(pwm_1);
-//			enable_pwm(pwm_2);
-//		}
 		// If stop request isn't received more then _diff_time_stop_responce -> get suspend responce task
 		if (SysTime - _begin_responce_task > _diff_time_stop_responce)
 		{
@@ -272,6 +265,9 @@ void main_task(void *pvParameters)
 					else
 					{
 						set_pwm(pwm_1, 80U);
+					}
+					if(pwm_enable_once){
+					enable_pwm(pwm_2);
 					}
 				}
 			}
