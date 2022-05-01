@@ -184,9 +184,3 @@ void _adc_init(void)
   adc_enable(ADC0);
 }
 
-void _nvic_enable(void)
-{
-  // nvic_irq_enable(USART0_IRQn, 2, 2); // For UART0_PC
-  // nvic_irq_enable(TIMER0_Channel_IRQn, 1, 1); //request input capture
-  // nvic_irq_enable(TIMER2_IRQn, 2, 1); //Detect filling pwm signal
-}

@@ -47,7 +47,6 @@ static inline void SysInit(void)
 	_tim2_init();
 	_tim3_init();
 	_adc_init();
-	_nvic_enable();
 }
 
 void ERROR_HANDLER(void)
