@@ -128,19 +128,26 @@ void main_task(void *pvParameters)
 	// This variable for input measured pwm_value
 	static uint8_t _pwm_measured = 0x00U;
 	// For value from ADC
-	set_pwm(pwm_1, 0x0AU);
-	enable_pwm(pwm_1);
+	//set_pwm(pwm_1, 0x0AU);
+	//enable_pwm(pwm_1);
+	disable_pwm(pwm_1);
 	static bool pwm_enable_once = false;
+	static bool pwm_main_enable = false;
 /*************************************************************************************************
  * ***********************************************************************************************
  * ***********************************************************************************************/	
 	for (;;)
 	{
 		//First pwm enable
+		if (SysTime > 2U && !pwm_main_enable){
+			enable_pwm(pwm_1);
+			set_pwm(pwm_1, 10U);
+			pwm_main_enable = true;
+		}
 		if (SysTime > 10U && !pwm_enable_once){
 			set_pwm(pwm_2, 10U);
-			set_pwm(pwm_1, 10U);
-			enable_pwm(pwm_1);
+			//set_pwm(pwm_1, 10U);
+			//enable_pwm(pwm_1);
 			enable_pwm(pwm_2);
 			pwm_enable_once = true;
 		}

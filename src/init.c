@@ -92,7 +92,6 @@ void _tim1_init(void)
   rcu_periph_clock_enable(RCU_AF);
   static timer_oc_parameter_struct timer_ocintpara;
   static timer_parameter_struct timer_initpara;
-
   timer_deinit(TIMER1);
 
   /* TIMER1 configuration */
@@ -123,6 +122,7 @@ void _tim1_init(void)
   timer_auto_reload_shadow_enable(TIMER1);
   /* auto-reload preload enable */
   timer_enable(TIMER1);
+	disable_pwm(pwm_1);
   disable_pwm(pwm_2);
 }
 
