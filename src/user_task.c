@@ -297,6 +297,7 @@ void main_task(void *pvParameters)
 			break;
 
 		case start_input:
+			//RESET pwm to default value
 				set_pwm(pwm_1, 10U);
 				set_pwm(pwm_2, 10U);
 		
@@ -418,7 +419,23 @@ void sample_task(void *pvParameters)
 		// LED activity, blink every second
 		if ((sysTick % 500) == 0U)
 		{
-			GPIO_OCTL(LED_PORT) ^= LED_PIN;
+			
+			GPIO_OCTL(LED_RUN_PORT) ^= RUN_LED;//Get led activity
+			//led activity with start capture
+			if (eTaskGetState(response_task_handle) == eRunning){
+				GPIO_OCTL(LED_START_PORT) ^= START_LED;
+			}
+			else{
+				GPIO_OCTL(LED_START_PORT) &= ~START_LED;
+			}
+			//LED ACT WITH IC 
+			if(time_val < 5000U){ //Idle state edge is 5 sec. 
+				GPIO_OCTL(LED_ACT_PORT) ^= ACT_LED;
+			}
+			else{
+				GPIO_OCTL(LED_ACT_PORT) &= ~ACT_LED;
+			}
+			
 		}
 		vTaskDelay(pdMS_TO_TICKS(1));
 	}
