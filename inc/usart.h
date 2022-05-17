@@ -4,5 +4,8 @@
 
 #define USART_PC USART0
 
-bool print(char* pMsg);
+void vSendByte(uint8_t Byte);
+
+void vPrint(uint8_t *pMsg);
+
 #endif
