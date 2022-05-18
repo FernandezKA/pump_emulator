@@ -101,8 +101,8 @@ void ad8400_1_task(void *pvParameters)
 	uint8_t res_value = 0x00U;
 	for (;;)
 	{
-		vTaskDelay(pdMS_TO_TICKS(100));
-		//_AD8400_set(res_value++, 1);
+		vTaskDelay(pdMS_TO_TICKS(1));
+			_AD8400_set(res_value++, 1);
 	}
 }
 
@@ -114,8 +114,9 @@ void main_task(void *pvParameters)
 	static enum work_mode _mode;
 	static uint8_t _valid_index = 0x00U;
 	// Valid times definitions
-	const static uint16_t valid_high = 160;
-	const static uint16_t valid_low = 140;
+	
+	const static uint16_t valid_high = 160U;
+	const static uint16_t valid_low = 140U;
 	const static uint16_t stop_seq = 800;
 	// Max deviation definitions
 	const static uint16_t max_dev_high = valid_high / 10; // 10%
@@ -135,6 +136,7 @@ void main_task(void *pvParameters)
 	disable_pwm(pwm_1);
 	static bool pwm_enable_once = false;
 	static bool pwm_main_enable = false;
+	print("Ver. 2.1, 2022-05-18");
 	/*************************************************************************************************
 	 * ***********************************************************************************************
 	 * ***********************************************************************************************/
@@ -171,10 +173,10 @@ void main_task(void *pvParameters)
 		 * ***********************************************************************************************/
 		// If state of line isn't different more then _edge_cap_val, then detect error
 		if (SysTime - _last_capture_time > _edge_capture_val)
-		{ // Check edge states of lilne (connected to Vss or Vdd)
+		{ // Check edge states of line (connected to Vss or Vdd)
 			disable_pwm(pwm_1);
 			set_pwm(pwm_2, 10U);
-			// disable_pwm(pwm_2);
+			//disable_pwm(pwm_2);
 		}
 		/***********************************************************************************************/
 		// If new sample is loaded into queue => parse it
@@ -191,7 +193,7 @@ void main_task(void *pvParameters)
 			{
 				if (_tmp_pulse.state)
 				{ // High state
-					if (abs(_tmp_pulse.time - valid_high) < max_dev_high)
+					if (_tmp_pulse.time - 160 < 20)
 					{
 						++_valid_index; // Detect valid of sequence at index, valid == 4
 					}
@@ -202,7 +204,7 @@ void main_task(void *pvParameters)
 				}
 				else
 				{ // Low state
-					if (abs(_tmp_pulse.time - valid_low) < max_dev_low)
+					if (_tmp_pulse.time - 140 < 20)
 					{
 						++_valid_index;
 					}
@@ -429,12 +431,10 @@ void sample_task(void *pvParameters)
 		{
 
 			GPIO_OCTL(LED_RUN_PORT) ^= RUN_LED; // Get led activity
-			//GPIO_OCTL(GPIOB)^=(1<<0);
-			usart_data_transmit(USART0, 0x55U);
 			// led activity with start capture
 			if (response_task_handle != NULL)
 			{
-				if (eTaskGetState(response_task_handle) == eRunning)
+				if (eTaskGetState(response_task_handle) != eSuspended)
 				{
 					GPIO_OCTL(LED_START_PORT) ^= START_LED;
 				}
@@ -574,10 +574,11 @@ void uart_info_task(void *pvParameters)
 		{
 			vSendByte(u8Rec_Buff);
 		}
-		vTaskDelay(pdMS_TO_TICKS(1000U)); // Check info buffer every second
+		xQueueReset(uart_info);
+		vTaskDelay(pdMS_TO_TICKS(1U)); // Check info buffer every second
 	}
 }
 
 /***********************************************
-//End of task functions
+//End of tasks functions
 ***********************************************/

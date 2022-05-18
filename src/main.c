@@ -21,7 +21,7 @@ int main()
 	sig_gen_flag = xQueueCreate(1, sizeof(bool));
 	adc_0_val = xQueueCreate(5, sizeof(uint8_t));
 	adc_1_val = xQueueCreate(5, sizeof(uint8_t));
-	uart_info = xQueueCreate(0x10, sizeof(uint8_t));
+	uart_info = xQueueCreate(0xFF, sizeof(uint8_t));
 
 	if (pdPASS != xTaskCreate(main_task, "main_task", configMINIMAL_SECURE_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2, &main_task_handle))
 		ERROR_HANDLER();
@@ -33,6 +33,8 @@ int main()
 		ERROR_HANDLER();
 	if (pdPASS != xTaskCreate(ad8400_1_task, "ad8400_1 task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &ad8400_1_task_handle))
 		ERROR_HANDLER();
+//	if (pdPASS != xTaskCreate(uart_info_task, "uart info task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &uart_info_task_handle))
+//		ERROR_HANDLER();
 	vTaskStartScheduler();
 	for (;;)
 		;
@@ -44,7 +46,6 @@ static inline void SysInit(void)
 	_clk_init();
 	_gpio_init();
 	_usart_init();
-	//_tim0_init();
 	_tim1_init();
 	_tim2_init();
 	_tim3_init();

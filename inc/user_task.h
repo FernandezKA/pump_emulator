@@ -35,7 +35,7 @@ extern TaskHandle_t sample_task_handle;
 extern TaskHandle_t response_task_handle;
 extern TaskHandle_t adc_task_handle;
 extern TaskHandle_t pwm_def_handle;
-extern TaskHandle_t uart_info_handle;
+extern TaskHandle_t uart_info_task_handle;
 
 // queues for tasks
 extern QueueHandle_t pwm_value;
