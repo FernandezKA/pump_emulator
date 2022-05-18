@@ -6,6 +6,6 @@
 
 void vSendByte(uint8_t Byte);
 
-void vPrint(uint8_t *pMsg);
+void print(char *pMsg);
 
 #endif

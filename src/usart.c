@@ -8,7 +8,7 @@ void vSendByte(uint8_t Byte){
 	USART_DATA(USART_PC) = Byte;
 }
 
-void vPrint(uint8_t *pMsg){
+void print(char *pMsg){
 	static uint8_t u8MsgSize = 0x00U;
 	static uint8_t u8MsgBuff[0x40U]; //Max size info msg is 64 symbol
 	static char last_symbol, curr_symbol;

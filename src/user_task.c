@@ -212,7 +212,7 @@ void main_task(void *pvParameters)
 					}
 				}
 
-				//Imp: valid start sequence index will be cutted from 3 to 2, for most sensitive detecting
+				// Imp: valid start sequence index will be cutted from 3 to 2, for most sensitive detecting
 				if (_valid_index >= 0x02U) // valid_index - 1, because count from 0
 				{
 					_mode = start_input;
@@ -304,6 +304,7 @@ void main_task(void *pvParameters)
 			break;
 
 		case start_input:
+			print("Start request detected\n\r");
 			// RESET pwm to default value
 			set_pwm(pwm_1, 10U);
 			set_pwm(pwm_2, 10U);
@@ -328,7 +329,7 @@ void main_task(void *pvParameters)
 		case stop_input:
 			set_pwm(pwm_1, 10U);
 			set_pwm(pwm_2, 10U);
-
+			print("Stop detected\n\r");
 			if (NULL != response_task_handle)
 			{
 				vTaskSuspend(response_task_handle);
@@ -428,17 +429,23 @@ void sample_task(void *pvParameters)
 		{
 
 			GPIO_OCTL(LED_RUN_PORT) ^= RUN_LED; // Get led activity
+			//GPIO_OCTL(GPIOB)^=(1<<0);
+			usart_data_transmit(USART0, 0x55U);
 			// led activity with start capture
-			if (eTaskGetState(response_task_handle) == eRunning)
+			if (response_task_handle != NULL)
 			{
-				GPIO_OCTL(LED_START_PORT) ^= START_LED;
+				if (eTaskGetState(response_task_handle) == eRunning)
+				{
+					GPIO_OCTL(LED_START_PORT) ^= START_LED;
+				}
 			}
 			else
 			{
 				GPIO_OCTL(LED_START_PORT) &= ~START_LED;
 			}
+
 			// LED ACT WITH IC
-			if (time_val < 5000U)
+			if (time_val < 2000U)
 			{ // Idle state edge is 5 sec.
 				GPIO_OCTL(LED_ACT_PORT) ^= ACT_LED;
 			}
@@ -556,15 +563,18 @@ void pwm_def_task(void *pvParameters)
 /*************************************************************************************************
  * ***********************************************************************************************
  * ***********************************************************************************************/
-//This task used for send uart info messages
-void uart_info_task(void *pvParameters){
+// This task used for send uart info messages
+void uart_info_task(void *pvParameters)
+{
 	static uint8_t u8Rec_Buff;
-	for(;;){
-			//Check fifo buff state
-			while(pdPASS == xQueueReceive(uart_info, &u8Rec_Buff, 0)){
-				vSendByte(u8Rec_Buff);
-			}
-			vTaskDelay(pdMS_TO_TICKS(1000U)); //Check info buffer every second
+	for (;;)
+	{
+		// Check fifo buff state
+		while (pdPASS == xQueueReceive(uart_info, &u8Rec_Buff, 0))
+		{
+			vSendByte(u8Rec_Buff);
+		}
+		vTaskDelay(pdMS_TO_TICKS(1000U)); // Check info buffer every second
 	}
 }
 

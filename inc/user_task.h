@@ -2,6 +2,7 @@
 #define _user_task_h_
 
 #include "main.h"
+#include "usart.h"
 
 enum work_mode
 {

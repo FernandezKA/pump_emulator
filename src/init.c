@@ -37,16 +37,16 @@ void _gpio_init(void)
 
 void _usart_init(void)
 {
-//  usart_deinit(USART0);
-//  usart_baudrate_set(USART0, 115200UL);
-//  usart_parity_config(USART0, USART_PM_NONE);
-//  usart_transmit_config(USART0, USART_TRANSMIT_ENABLE);
+  usart_deinit(USART0);
+  usart_baudrate_set(USART0, 115200UL);
+  usart_parity_config(USART0, USART_PM_NONE);
+  usart_transmit_config(USART0, USART_TRANSMIT_ENABLE);
 //  usart_receive_config(USART0, USART_RECEIVE_ENABLE);
 //  usart_interrupt_enable(USART0, USART_INT_RBNE);
-//  gpio_afio_deinit();
-//  gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_9);
+  gpio_afio_deinit();
+  gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_9);
 //  //gpio_init(GPIOA, GPIO_MODE_IPD, GPIO_OSPEED_50MHZ, GPIO_PIN_10);
-//  usart_enable(USART0);
+  usart_enable(USART0);
 }
 
 void _tim0_init(void)
