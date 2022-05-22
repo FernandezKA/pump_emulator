@@ -26,12 +26,13 @@ void ERROR_HANDLER(void);
 #define SAMPLE_PIN (1 << 8)
 #define SAMPLE_PORT GPIOA
 
-#define LED_RUN_PORT GPIOC
-#define RUN_LED (1 << 13)
+#define LED_RUN_PORT GPIOB
+#define RUN_LED (1 << 7)
 #define LED_ACT_PORT GPIOB
-#define LED_START_PORT GPIOB
+#define LED_START_PORT GPIOC
 #define ACT_LED	(1U<<6)
-#define START_LED (1U<<7)
+#define START_LED (1U<<13)
+
 
 #define RESPONSE_PORT GPIOA
 #define RESPONSE_PIN (1 << 10)

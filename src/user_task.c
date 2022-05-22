@@ -98,11 +98,13 @@ void ad8400_0_task(void *pvParameters)
 
 void ad8400_1_task(void *pvParameters)
 {
-	uint8_t res_value = 0x00U;
+	uint8_t res_value = 250U;
 	for (;;)
 	{
-		vTaskDelay(pdMS_TO_TICKS(1));
-			_AD8400_set(res_value++, 1);
+		if(res_value > 40U){
+			_AD8400_set(res_value--, 1);
+		}
+		vTaskDelay(pdMS_TO_TICKS(6000));
 	}
 }
 
@@ -136,7 +138,7 @@ void main_task(void *pvParameters)
 	disable_pwm(pwm_1);
 	static bool pwm_enable_once = false;
 	static bool pwm_main_enable = false;
-	print("Ver. 2.1, 2022-05-18");
+	print("Ver. 2.2, 2022-05-20");
 	/*************************************************************************************************
 	 * ***********************************************************************************************
 	 * ***********************************************************************************************/
@@ -174,7 +176,8 @@ void main_task(void *pvParameters)
 		// If state of line isn't different more then _edge_cap_val, then detect error
 		if (SysTime - _last_capture_time > _edge_capture_val)
 		{ // Check edge states of line (connected to Vss or Vdd)
-			disable_pwm(pwm_1);
+			//disable_pwm(pwm_1);
+			set_pwm(pwm_1, 10U);
 			set_pwm(pwm_2, 10U);
 			//disable_pwm(pwm_2);
 		}
@@ -182,18 +185,18 @@ void main_task(void *pvParameters)
 		// If new sample is loaded into queue => parse it
 		if (pdPASS == xQueueReceive(cap_signal, &_tmp_pulse, 0)) // Check capture signal
 		{
-			_last_capture_time = SysTime;
+    			_last_capture_time = SysTime;
 			// Divide by 3 groups - with knowledge timings
 			if (_tmp_pulse.time < 12) // PWM case
 			{
 				_mode = pwm_input;
 				// enable_pwm(pwm_1);
 			}
-			else if (_tmp_pulse.time > 100 && _tmp_pulse.time < 500) // Request start detect
+			else if (_tmp_pulse.time > 100 && _tmp_pulse.time < 250) // Request start detect
 			{
 				if (_tmp_pulse.state)
 				{ // High state
-					if (_tmp_pulse.time - 160 < 20)
+					if (_tmp_pulse.time - valid_high < max_dev_high)
 					{
 						++_valid_index; // Detect valid of sequence at index, valid == 4
 					}
@@ -204,7 +207,7 @@ void main_task(void *pvParameters)
 				}
 				else
 				{ // Low state
-					if (_tmp_pulse.time - 140 < 20)
+					if (_tmp_pulse.time - valid_low < max_dev_low)
 					{
 						++_valid_index;
 					}
@@ -215,7 +218,7 @@ void main_task(void *pvParameters)
 				}
 
 				// Imp: valid start sequence index will be cutted from 3 to 2, for most sensitive detecting
-				if (_valid_index >= 0x02U) // valid_index - 1, because count from 0
+				if (_valid_index >= 0x03U) // valid_index - 1, because count from 0
 				{
 					_mode = start_input;
 					_valid_index = 0x00U;
@@ -227,7 +230,7 @@ void main_task(void *pvParameters)
 			}
 			else // Request stop detect
 			{
-				if ((abs(_tmp_pulse.time - stop_seq) < max_dev_stop))
+				if (_tmp_pulse.time - stop_seq <= max_dev_stop)
 				{
 					_mode = stop_input;
 				}
@@ -427,7 +430,7 @@ void sample_task(void *pvParameters)
 		}
 
 		// LED activity, blink every second
-		if ((sysTick % 500) == 0U)
+		if ((sysTick % 250) == 0U)
 		{
 
 			GPIO_OCTL(LED_RUN_PORT) ^= RUN_LED; // Get led activity
@@ -437,6 +440,9 @@ void sample_task(void *pvParameters)
 				if (eTaskGetState(response_task_handle) != eSuspended)
 				{
 					GPIO_OCTL(LED_START_PORT) ^= START_LED;
+				}
+				else{
+					GPIO_OCTL(LED_START_PORT) &= ~START_LED;
 				}
 			}
 			else
