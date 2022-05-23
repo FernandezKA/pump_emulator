@@ -123,7 +123,7 @@ void main_task(void *pvParameters)
 	// Max deviation definitions
 	const static uint16_t max_dev_high = valid_high / 10; // 10%
 	const static uint16_t max_dev_low = valid_low / 10;	  // 10%
-	const static uint16_t max_dev_stop = stop_seq / 10;	  // 10%
+	const static uint16_t max_dev_stop = 300;	  // 10%
 	// Used for action with timout
 	static uint32_t _begin_responce_task = 0x00U;
 	const uint32_t _diff_time_stop_responce = 0x14U;
@@ -190,8 +190,10 @@ void main_task(void *pvParameters)
 			if (_tmp_pulse.time < 12) // PWM case
 			{
 				_mode = pwm_input;
+				_valid_index = 0x00U;
 				// enable_pwm(pwm_1);
 			}
+			
 			else if (_tmp_pulse.time > 100 && _tmp_pulse.time < 250) // Request start detect
 			{
 				if (_tmp_pulse.state)
@@ -218,7 +220,7 @@ void main_task(void *pvParameters)
 				}
 
 				// Imp: valid start sequence index will be cutted from 3 to 2, for most sensitive detecting
-				if (_valid_index >= 0x03U) // valid_index - 1, because count from 0
+				if (_valid_index >= 0x06U) // valid_index - 1, because count from 0
 				{
 					_mode = start_input;
 					_valid_index = 0x00U;
@@ -228,15 +230,23 @@ void main_task(void *pvParameters)
 					_mode = undef;
 				}
 			}
+			
 			else // Request stop detect
 			{
-				if (_tmp_pulse.time - stop_seq <= max_dev_stop)
-				{
-					_mode = stop_input;
+				if(_tmp_pulse.state){
+					if (_tmp_pulse.time > stop_seq && _tmp_pulse.time < stop_seq + max_dev_stop)
+					{
+						_mode = stop_input;
+						_valid_index = 0x00U;
+					}
+					else
+					{
+						_mode = undef;
+					}
 				}
-				else
-				{
+				else{
 					_mode = undef;
+					_valid_index = 0x00U;
 				}
 			}
 		}
@@ -469,7 +479,7 @@ void sample_task(void *pvParameters)
 // This task used for genrating responce signal at start request
 void response_task(void *pvParameters)
 {
-	const struct pulse response[] = {{.state = true, .time = 180}, {.state = false, .time = 100}, {.state = true, .time = 100}, {.state = false, .time = 10}, {.state = true, .time = 190}, {.state = false, .time = 100}};
+	const struct pulse response[] = {{.state = true, .time = 100}, {.state = false, .time = 20}, {.state = true, .time = 180}, {.state = false, .time = 100}, {.state = true, .time = 100}, {.state = false, .time = 10}, {.state = true, .time = 100}, {.state = false, .time = 100}};
 	uint8_t response_index = 0x00U;
 	for (;;)
 	{
@@ -481,7 +491,7 @@ void response_task(void *pvParameters)
 		{
 			GPIO_OCTL(RESPONSE_PORT) &= ~RESPONSE_PIN;
 		}
-		if (response_index < 0x06U)
+		if (response_index < 0x08U)
 		{
 			vTaskDelay(pdMS_TO_TICKS(response[response_index++].time));
 		}
