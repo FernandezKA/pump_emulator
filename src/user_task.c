@@ -101,7 +101,8 @@ void ad8400_1_task(void *pvParameters)
 	uint8_t res_value = 250U;
 	for (;;)
 	{
-		if(res_value > 40U){
+		if (res_value > 40U)
+		{
 			_AD8400_set(res_value--, 1);
 		}
 		vTaskDelay(pdMS_TO_TICKS(6000));
@@ -116,14 +117,14 @@ void main_task(void *pvParameters)
 	static enum work_mode _mode;
 	static uint8_t _valid_index = 0x00U;
 	// Valid times definitions
-	
+
 	const static uint16_t valid_high = 160U;
 	const static uint16_t valid_low = 140U;
 	const static uint16_t stop_seq = 800;
 	// Max deviation definitions
-	const static uint16_t max_dev_high = valid_high / 10; // 10%
-	const static uint16_t max_dev_low = valid_low / 10;	  // 10%
-	const static uint16_t max_dev_stop = 300;	  // 10%
+	const static uint16_t max_dev_high = 16;  // 10%
+	const static uint16_t max_dev_low = 14;	  // 10%
+	const static uint16_t max_dev_stop = 300; // 10%
 	// Used for action with timout
 	static uint32_t _begin_responce_task = 0x00U;
 	const uint32_t _diff_time_stop_responce = 0x14U;
@@ -176,29 +177,30 @@ void main_task(void *pvParameters)
 		// If state of line isn't different more then _edge_cap_val, then detect error
 		if (SysTime - _last_capture_time > _edge_capture_val)
 		{ // Check edge states of line (connected to Vss or Vdd)
-			//disable_pwm(pwm_1);
+			// disable_pwm(pwm_1);
+			_valid_index = 0x00U;
 			set_pwm(pwm_1, 10U);
 			set_pwm(pwm_2, 10U);
-			//disable_pwm(pwm_2);
+			disable_pwm(pwm_1);
 		}
 		/***********************************************************************************************/
 		// If new sample is loaded into queue => parse it
 		if (pdPASS == xQueueReceive(cap_signal, &_tmp_pulse, 0)) // Check capture signal
 		{
-    			_last_capture_time = SysTime;
+			_last_capture_time = SysTime;
 			// Divide by 3 groups - with knowledge timings
-			if (_tmp_pulse.time < 12) // PWM case
+			if (_tmp_pulse.time < 15) // PWM case
 			{
 				_mode = pwm_input;
 				_valid_index = 0x00U;
 				// enable_pwm(pwm_1);
 			}
-			
-			else if (_tmp_pulse.time > 100 && _tmp_pulse.time < 250) // Request start detect
+
+			else if (_tmp_pulse.time > 100 && _tmp_pulse.time < 300) // Request start detect
 			{
 				if (_tmp_pulse.state)
 				{ // High state
-					if (_tmp_pulse.time - valid_high < max_dev_high)
+					if (_tmp_pulse.time > valid_high - max_dev_high && _tmp_pulse.time < valid_high + max_dev_high)
 					{
 						++_valid_index; // Detect valid of sequence at index, valid == 4
 					}
@@ -209,7 +211,7 @@ void main_task(void *pvParameters)
 				}
 				else
 				{ // Low state
-					if (_tmp_pulse.time - valid_low < max_dev_low)
+					if (_tmp_pulse.time > valid_low - max_dev_low && _tmp_pulse.time < valid_low + max_dev_low)
 					{
 						++_valid_index;
 					}
@@ -220,8 +222,13 @@ void main_task(void *pvParameters)
 				}
 
 				// Imp: valid start sequence index will be cutted from 3 to 2, for most sensitive detecting
-				if (_valid_index >= 0x06U) // valid_index - 1, because count from 0
+				if (_valid_index >= 0x05U) // valid_index - 1, because count from 0
 				{
+					print("Start seq. detected\n\r");
+					if (NULL == response_task_handle)
+					{
+						vTaskResume(response_task_handle);
+					}
 					_mode = start_input;
 					_valid_index = 0x00U;
 				}
@@ -230,10 +237,11 @@ void main_task(void *pvParameters)
 					_mode = undef;
 				}
 			}
-			
+
 			else // Request stop detect
 			{
-				if(_tmp_pulse.state){
+				if (_tmp_pulse.state)
+				{
 					if (_tmp_pulse.time > stop_seq && _tmp_pulse.time < stop_seq + max_dev_stop)
 					{
 						_mode = stop_input;
@@ -244,7 +252,8 @@ void main_task(void *pvParameters)
 						_mode = undef;
 					}
 				}
-				else{
+				else
+				{
 					_mode = undef;
 					_valid_index = 0x00U;
 				}
@@ -324,18 +333,6 @@ void main_task(void *pvParameters)
 			set_pwm(pwm_1, 10U);
 			set_pwm(pwm_2, 10U);
 
-			if (NULL == response_task_handle)
-			{
-				if (pdPASS != xTaskCreate(response_task, "responce_tesk", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2, &response_task_handle))
-				{
-					// ERROR_HANDLER();
-					__NOP();
-				}
-			}
-			else
-			{
-				vTaskResume(response_task_handle);
-			}
 			_valid_index = 0x00U;
 			_begin_responce_task = SysTime;
 			_mode = undef;
@@ -451,7 +448,8 @@ void sample_task(void *pvParameters)
 				{
 					GPIO_OCTL(LED_START_PORT) ^= START_LED;
 				}
-				else{
+				else
+				{
 					GPIO_OCTL(LED_START_PORT) &= ~START_LED;
 				}
 			}
