@@ -182,6 +182,10 @@ void main_task(void *pvParameters)
 			set_pwm(pwm_1, 10U);
 			set_pwm(pwm_2, 10U);
 			disable_pwm(pwm_1);
+			GPIO_OCTL(LED_START_PORT) |= START_LED;
+		}
+		else{
+			GPIO_OCTL(LED_START_PORT) &=~START_LED;
 		}
 		/***********************************************************************************************/
 		// If new sample is loaded into queue => parse it
@@ -198,9 +202,9 @@ void main_task(void *pvParameters)
 
 			else if (_tmp_pulse.time > 100 && _tmp_pulse.time < 300) // Request start detect
 			{
-				if (_tmp_pulse.state)
+				if (!_tmp_pulse.state)
 				{ // High state
-					if (_tmp_pulse.time > valid_high - max_dev_high && _tmp_pulse.time < valid_high + max_dev_high)
+					if (_tmp_pulse.time > 144 && _tmp_pulse.time < 176U)
 					{
 						++_valid_index; // Detect valid of sequence at index, valid == 4
 					}
@@ -211,7 +215,7 @@ void main_task(void *pvParameters)
 				}
 				else
 				{ // Low state
-					if (_tmp_pulse.time > valid_low - max_dev_low && _tmp_pulse.time < valid_low + max_dev_low)
+					if (_tmp_pulse.time > 136 && _tmp_pulse.time < 154)
 					{
 						++_valid_index;
 					}
@@ -222,13 +226,10 @@ void main_task(void *pvParameters)
 				}
 
 				// Imp: valid start sequence index will be cutted from 3 to 2, for most sensitive detecting
-				if (_valid_index >= 0x05U) // valid_index - 1, because count from 0
+				if (_valid_index >= 0x06U) // valid_index - 1, because count from 0
 				{
 					print("Start seq. detected\n\r");
-					if (NULL == response_task_handle)
-					{
-						vTaskResume(response_task_handle);
-					}
+					vTaskResume(response_task_handle);
 					_mode = start_input;
 					_valid_index = 0x00U;
 				}
@@ -332,7 +333,7 @@ void main_task(void *pvParameters)
 			// RESET pwm to default value
 			set_pwm(pwm_1, 10U);
 			set_pwm(pwm_2, 10U);
-
+			xQueueReset(pwm_value);
 			_valid_index = 0x00U;
 			_begin_responce_task = SysTime;
 			_mode = undef;
@@ -341,6 +342,7 @@ void main_task(void *pvParameters)
 		case stop_input:
 			set_pwm(pwm_1, 10U);
 			set_pwm(pwm_2, 10U);
+			xQueueReset(pwm_value);
 			print("Stop detected\n\r");
 			if (NULL != response_task_handle)
 			{
@@ -442,21 +444,21 @@ void sample_task(void *pvParameters)
 
 			GPIO_OCTL(LED_RUN_PORT) ^= RUN_LED; // Get led activity
 			// led activity with start capture
-			if (response_task_handle != NULL)
-			{
-				if (eTaskGetState(response_task_handle) != eSuspended)
-				{
-					GPIO_OCTL(LED_START_PORT) ^= START_LED;
-				}
-				else
-				{
-					GPIO_OCTL(LED_START_PORT) &= ~START_LED;
-				}
-			}
-			else
-			{
-				GPIO_OCTL(LED_START_PORT) &= ~START_LED;
-			}
+//			if (response_task_handle != NULL)
+//			{
+//				if (eTaskGetState(response_task_handle) != eSuspended)
+//				{
+//					GPIO_OCTL(LED_START_PORT) ^= START_LED;
+//				}
+//				else
+//				{
+//					GPIO_OCTL(LED_START_PORT) &= ~START_LED;
+//				}
+//			}
+//			else
+//			{
+//				GPIO_OCTL(LED_START_PORT) &= ~START_LED;
+//			}
 
 			// LED ACT WITH IC
 			if (time_val < 2000U)
@@ -477,7 +479,8 @@ void sample_task(void *pvParameters)
 // This task used for genrating responce signal at start request
 void response_task(void *pvParameters)
 {
-	const struct pulse response[] = {{.state = true, .time = 100}, {.state = false, .time = 20}, {.state = true, .time = 180}, {.state = false, .time = 100}, {.state = true, .time = 100}, {.state = false, .time = 10}, {.state = true, .time = 100}, {.state = false, .time = 100}};
+	const struct pulse response[] = {{.state = true, .time = 100}, {.state = false, .time = 20}, {.state = true, .time = 180}, {.state = false, .time = 100},\
+	{.state = true, .time = 100}, {.state = false, .time = 10}, {.state = true, .time = 100}, {.state = false, .time = 100}};
 	uint8_t response_index = 0x00U;
 	for (;;)
 	{
