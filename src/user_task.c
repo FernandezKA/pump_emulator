@@ -182,10 +182,11 @@ void main_task(void *pvParameters)
 			set_pwm(pwm_1, 10U);
 			set_pwm(pwm_2, 10U);
 			disable_pwm(pwm_1);
-			GPIO_OCTL(LED_START_PORT) |= START_LED;
+			GPIO_OCTL(LED_ERROR_PORT) |= ERROR_LED;
 		}
-		else{
-			GPIO_OCTL(LED_START_PORT) &=~START_LED;
+		else
+		{
+			GPIO_OCTL(LED_ERROR_PORT) &= ~ERROR_LED;
 		}
 		/***********************************************************************************************/
 		// If new sample is loaded into queue => parse it
@@ -226,11 +227,16 @@ void main_task(void *pvParameters)
 				}
 
 				// Imp: valid start sequence index will be cutted from 3 to 2, for most sensitive detecting
-				if (_valid_index >= 0x06U) // valid_index - 1, because count from 0
+				if (_valid_index >= 0x05U) // valid_index - 1, because count from 0
 				{
-					print("Start seq. detected\n\r");
-					vTaskResume(response_task_handle);
-					_mode = start_input;
+					vTaskDelay(pdMS_TO_TICKS(160U));
+					if((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN){
+						vTaskResume(response_task_handle);
+						_mode = start_input;
+						_valid_index = 0X00U;
+					}
+					//print("Start seq. detected\n\r");
+					//_mode = undef;
 					_valid_index = 0x00U;
 				}
 				else
@@ -442,32 +448,32 @@ void sample_task(void *pvParameters)
 		if ((sysTick % 250) == 0U)
 		{
 
-			GPIO_OCTL(LED_RUN_PORT) ^= RUN_LED; // Get led activity
+			GPIO_OCTL(LED_LIFE_PORT) ^= LIFE_LED; // Get led activity
 			// led activity with start capture
-//			if (response_task_handle != NULL)
-//			{
-//				if (eTaskGetState(response_task_handle) != eSuspended)
-//				{
-//					GPIO_OCTL(LED_START_PORT) ^= START_LED;
-//				}
-//				else
-//				{
-//					GPIO_OCTL(LED_START_PORT) &= ~START_LED;
-//				}
-//			}
-//			else
-//			{
-//				GPIO_OCTL(LED_START_PORT) &= ~START_LED;
-//			}
+			//			if (response_task_handle != NULL)
+			//			{
+			//				if (eTaskGetState(response_task_handle) != eSuspended)
+			//				{
+			//					GPIO_OCTL(LED_START_PORT) ^= START_LED;
+			//				}
+			//				else
+			//				{
+			//					GPIO_OCTL(LED_START_PORT) &= ~START_LED;
+			//				}
+			//			}
+			//			else
+			//			{
+			//				GPIO_OCTL(LED_START_PORT) &= ~START_LED;
+			//			}
 
 			// LED ACT WITH IC
 			if (time_val < 2000U)
 			{ // Idle state edge is 5 sec.
-				GPIO_OCTL(LED_ACT_PORT) ^= ACT_LED;
+				GPIO_OCTL(LED_RUN_PORT) ^= RUN_LED;
 			}
 			else
 			{
-				GPIO_OCTL(LED_ACT_PORT) &= ~ACT_LED;
+				GPIO_OCTL(LED_RUN_PORT) &= ~RUN_LED;
 			}
 		}
 		vTaskDelay(pdMS_TO_TICKS(1));
@@ -479,8 +485,7 @@ void sample_task(void *pvParameters)
 // This task used for genrating responce signal at start request
 void response_task(void *pvParameters)
 {
-	const struct pulse response[] = {{.state = true, .time = 100}, {.state = false, .time = 20}, {.state = true, .time = 180}, {.state = false, .time = 100},\
-	{.state = true, .time = 100}, {.state = false, .time = 10}, {.state = true, .time = 100}, {.state = false, .time = 100}};
+	const struct pulse response[] = {{.state = true, .time = 100}, {.state = false, .time = 20}, {.state = true, .time = 180}, {.state = false, .time = 100}, {.state = true, .time = 100}, {.state = false, .time = 10}, {.state = true, .time = 190}, {.state = false, .time = 100}};
 	uint8_t response_index = 0x00U;
 	for (;;)
 	{
