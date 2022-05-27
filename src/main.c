@@ -33,13 +33,12 @@ int main()
 		ERROR_HANDLER();
 	if (pdPASS != xTaskCreate(ad8400_1_task, "ad8400_1 task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &ad8400_1_task_handle))
 		ERROR_HANDLER();
-//	if (pdPASS == xTaskCreate(pwm_def_task, "pwm_def_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2, &pwm_def_task_handle))
-//		ERROR_HANDLER();
 	if (pdPASS != xTaskCreate(response_task, "responce_tesk", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2, &response_task_handle))
 		ERROR_HANDLER();
-//	if (pdPASS != xTaskCreate(uart_info_task, "uart info task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &uart_info_task_handle))
-//		ERROR_HANDLER();
-		vTaskSuspend(response_task_handle);
+	//	if (pdPASS != xTaskCreate(uart_info_task, "uart info task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &uart_info_task_handle))
+	//		ERROR_HANDLER();
+
+	vTaskSuspend(response_task_handle);
 	vTaskStartScheduler();
 	for (;;)
 		;

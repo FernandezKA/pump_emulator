@@ -30,9 +30,9 @@ void _gpio_init(void)
   gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_10); // NSS_1
   gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_7);  // SDI
   gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_5);  // SCK
-	
-	gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_7); // D8
-	gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_6);  // D9
+
+  gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_7); // D8
+  gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_10MHZ, GPIO_PIN_6); // D9
 }
 
 void _usart_init(void)
@@ -41,11 +41,11 @@ void _usart_init(void)
   usart_baudrate_set(USART0, 115200UL);
   usart_parity_config(USART0, USART_PM_NONE);
   usart_transmit_config(USART0, USART_TRANSMIT_ENABLE);
-//  usart_receive_config(USART0, USART_RECEIVE_ENABLE);
-//  usart_interrupt_enable(USART0, USART_INT_RBNE);
+  //  usart_receive_config(USART0, USART_RECEIVE_ENABLE);
+  //  usart_interrupt_enable(USART0, USART_INT_RBNE);
   gpio_afio_deinit();
   gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_9);
-//  //gpio_init(GPIOA, GPIO_MODE_IPD, GPIO_OSPEED_50MHZ, GPIO_PIN_10);
+  //  //gpio_init(GPIOA, GPIO_MODE_IPD, GPIO_OSPEED_50MHZ, GPIO_PIN_10);
   usart_enable(USART0);
 }
 
@@ -125,7 +125,7 @@ void _tim1_init(void)
   timer_auto_reload_shadow_enable(TIMER1);
   /* auto-reload preload enable */
   timer_enable(TIMER1);
-	disable_pwm(pwm_1);
+  disable_pwm(pwm_1);
   disable_pwm(pwm_2);
 }
 
@@ -186,4 +186,3 @@ void _adc_init(void)
   adc_regular_channel_config(ADC0, 0, ADC_CHANNEL_2, ADC_SAMPLETIME_1POINT5); // WHAT IS RANK??? (0 value)
   adc_enable(ADC0);
 }
-

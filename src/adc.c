@@ -29,12 +29,12 @@ uint16_t adc_get_result(void)
 // Software used function
 uint16_t u16ADC_Get_Mean(adc_simple *xADC)
 {
-		static uint32_t _sum = 0x00U;
-		for (uint8_t i = 0; i < 0x0A; ++i)
-		{
-			_sum += xADC->adc_val[i];
-		}
-		return (uint16_t) (_sum / 0x0AU);
+	static uint32_t _sum = 0x00U;
+	for (uint8_t i = 0; i < 0x0A; ++i)
+	{
+		_sum += xADC->adc_val[i];
+	}
+	return (uint16_t)(_sum / 0x0AU);
 }
 void vAddSample(adc_simple *xADC, uint16_t _value)
 {
@@ -97,19 +97,23 @@ void vSimpleADC_Init(adc_simple *xADC)
 	xADC->countSample = 0x00U;
 }
 
-bool bGetMeanValue(uint32_t* _sum, uint16_t* _mean, uint8_t* _counter, uint16_t _adc_val){
+bool bGetMeanValue(uint32_t *_sum, uint16_t *_mean, uint8_t *_counter, uint16_t _adc_val)
+{
 	bool _status = false;
-	if(*_counter <MEAN_NUMS){
+	if (*_counter < MEAN_NUMS)
+	{
 		*_sum += _adc_val;
 		++*_counter;
 	}
-	else{
-		*_mean = (uint16_t) (*_sum / MEAN_NUMS);
+	else
+	{
+		*_mean = (uint16_t)(*_sum / MEAN_NUMS);
 		_status = true;
 	}
 	return _status;
 }
 
-uint16_t _from_voltage(float value){
-	return (uint16_t) value * 1241U;
+uint16_t _from_voltage(float value)
+{
+	return (uint16_t)value * 1241U;
 }

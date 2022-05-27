@@ -42,4 +42,8 @@ extern QueueHandle_t pwm_value;
 extern QueueHandle_t cap_signal;
 extern QueueHandle_t uart_info;
 
+void reset_pwm_value(void);
+void reset_flags(void);
+
+
 #endif
