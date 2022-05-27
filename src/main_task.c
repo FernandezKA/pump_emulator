@@ -51,7 +51,7 @@ void main_task(void *pvParameters)
 		if (bus_error)
 		{ // Check edge states of line (connected to Vss or Vdd)
 			// disable_pwm(pwm_1);
-			reset_flags();
+			//reset_flags();
 			_valid_index = 0x00U;
 			set_pwm(pwm_2, 10U);
 			disable_pwm(pwm_1);
@@ -80,7 +80,7 @@ void main_task(void *pvParameters)
 		// If stop request isn't received more then _diff_time_stop_responce -> get suspend responce task
 		if (SysTime - _begin_responce_task > _diff_time_stop_responce)
 		{
-			reset_flags();
+			//reset_flags();
 			if (NULL != response_task_handle)
 			{
 				vTaskSuspend(response_task_handle);
@@ -110,7 +110,8 @@ void main_task(void *pvParameters)
 					else
 					{
 						_valid_index = 0x00U;
-						reset_flags();
+						//reset_flags();
+						start_req = false;
 					}
 				}
 				else
@@ -124,7 +125,8 @@ void main_task(void *pvParameters)
 					else
 					{
 						_valid_index = 0x00U;
-						reset_flags();
+						start_req = false;
+						//reset_flags();
 					}
 				}
 				if (_valid_index >= 0x05U) // valid_index - 1, because count from 0
@@ -140,7 +142,8 @@ void main_task(void *pvParameters)
 					}
 					else
 					{
-						reset_flags();
+						start_req = false;
+						//reset_flags();
 					}
 					_valid_index = 0x00U;
 				}
