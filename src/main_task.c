@@ -45,6 +45,23 @@ void main_task(void *pvParameters)
 	 * ***********************************************************************************************/
 	for (;;)
 	{
+		
+		
+		// If state of line isn't different more then _edge_cap_val, then detect error
+		if (bus_error)
+		{ // Check edge states of line (connected to Vss or Vdd)
+			// disable_pwm(pwm_1);
+			reset_flags();
+			_valid_index = 0x00U;
+			set_pwm(pwm_2, 10U);
+			disable_pwm(pwm_1);
+			GPIO_OCTL(LED_ERROR_PORT) |= ERROR_LED;
+		}
+		else
+		{
+			GPIO_OCTL(LED_ERROR_PORT) &= ~ERROR_LED;
+		}
+		
 		// First pwm enable
 		if (SysTime > 2U && !pwm_main_enable)
 		{
@@ -75,21 +92,6 @@ void main_task(void *pvParameters)
 		/*************************************************************************************************
 		 * ***********************************************************************************************
 		 * ***********************************************************************************************/
-
-		// If state of line isn't different more then _edge_cap_val, then detect error
-		if (bus_error)
-		{ // Check edge states of line (connected to Vss or Vdd)
-			// disable_pwm(pwm_1);
-			reset_flags();
-			_valid_index = 0x00U;
-			set_pwm(pwm_2, 10U);
-			disable_pwm(pwm_1);
-			GPIO_OCTL(LED_ERROR_PORT) |= ERROR_LED;
-		}
-		else
-		{
-			GPIO_OCTL(LED_ERROR_PORT) &= ~ERROR_LED;
-		}
 		/***********************************************************************************************/
 		// Only parse start and stop detections
 		if (pdPASS == xQueueReceive(cap_signal, &_tmp_pulse, 0)) // Check capture signal

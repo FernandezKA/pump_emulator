@@ -57,6 +57,7 @@ void sample_task(void *pvParameters)
 				xQueueSendToBack(pwm_value, &pwm.fill, 0);
 				pwm_detect = false;
 				(GPIO_OCTL(INV_PORT) &= ~INV_PIN); //Pull down line 
+				disable_pwm(pwm_1);
 			}
 			
 			if(bus.cap_time > 2000){ //detect bus error
