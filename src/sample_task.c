@@ -15,7 +15,7 @@ void sample_task(void *pvParameters)
 		uint16_t cap_time;
 	} bus;
 	bus.curr_state = bus.last_state = false;
-	bus.cap_time = 0x00U;
+	bus.cap_time = 0x20U;
 
 	struct
 	{
@@ -28,6 +28,38 @@ void sample_task(void *pvParameters)
 
 	for (;;)
 	{
+		{ // Check bus state
+			bus.last_state = bus.curr_state;
+			bus.curr_state = ((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN);
+
+			if (bus.curr_state == bus.last_state)
+			{
+				bus.cap_time++;
+			}
+			else
+			{
+				if (bus.cap_time < 15U)
+				{ // iNVERT PWM SIGNAL
+					bus.curr_state ? (GPIO_OCTL(INV_PORT) &= ~INV_PIN) : (GPIO_OCTL(INV_PORT) |= INV_PIN);
+					pwm_detect = TRUE;
+				}
+				bus.cap_time = 0x00U;
+			}
+		}
+
+		{ // Reset pwm measure for long pulse
+			if (bus.cap_time > 15U)
+			{
+				pwm.is_measured = false;
+				pwm.index = 0x00U;
+				pwm.ones = 0x00U;
+				pwm.fill = 0x00U;
+				xQueueSendToBack(pwm_value, &pwm.fill, 0);
+				pwm_detect = false;
+				(GPIO_OCTL(INV_PORT) &= ~INV_PIN); //Pull down line 
+			}
+		}
+		
 		{ // Measure pwm
 			if (pwm.is_measured)
 			{
@@ -45,35 +77,6 @@ void sample_task(void *pvParameters)
 					pwm.is_measured = true;
 				else
 					pwm.is_measured = false;
-			}
-		}
-
-		{ // Check bus state
-			bus.last_state = bus.curr_state;
-			bus.curr_state = ((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN);
-
-			if (bus.curr_state == bus.last_state)
-			{
-				bus.cap_time++;
-			}
-			else
-			{
-				if (bus.cap_time < 20U)
-				{ // iNVERT PWM SIGNAL
-					bus.curr_state ? (GPIO_OCTL(INV_PORT) &= ~INV_PIN) : (GPIO_OCTL(INV_PORT) |= INV_PIN);
-				}
-				bus.cap_time = 0x00U;
-			}
-		}
-
-		{ // Reset pwm measure for long pulse
-			if (bus.cap_time > 20U)
-			{
-				pwm.is_measured = false;
-				pwm.index = 0x00U;
-				pwm.ones = 0x00U;
-				pwm.fill = 0x00U;
-				xQueueSendToBack(pwm_value, &pwm.fill, 0);
 			}
 		}
 
@@ -119,17 +122,9 @@ void sample_task(void *pvParameters)
 
 			GPIO_OCTL(LED_LIFE_PORT) ^= LIFE_LED; // Get led activity
 			// LED ACT WITH IC
-			if ((start_req | stop_req | pwm_detect))
+			if ((start_req | pwm_detect))
 			{
-				if (count_blink < 8)
-				{
 					GPIO_OCTL(LED_RUN_PORT) ^= RUN_LED;
-				}
-				else
-				{
-					reset_flags();
-					count_blink = 0x00U;
-				}
 			}
 			else
 			{

@@ -69,6 +69,7 @@ void main_task(void *pvParameters)
 				vTaskSuspend(response_task_handle);
 				GPIO_OCTL(RESPONSE_PORT) &= ~RESPONSE_PIN; // RESET PIN TO LOW STATE
 			}
+			start_req = false;
 			_begin_responce_task = 0x00U; // A little of black magic
 		}
 		/*************************************************************************************************
@@ -171,7 +172,7 @@ void main_task(void *pvParameters)
 		if (pdPASS == xQueueReceive(pwm_value, &_pwm_measured, 0))
 		{ // It's pwm mode, measure success
 			_last_capture_time = SysTime;
-			pwm_detect = true;
+			//pwm_detect = true;
 			if (_pwm_measured < 11U)
 			{
 				// Set filling on PB1
