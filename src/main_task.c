@@ -7,7 +7,7 @@ void reset_pwm_value(void)
 
 void reset_flags(void)
 {
-	start_req = stop_req = pwm_detect = false;
+	start_req = bus_error = pwm_detect = false;
 }
 
 void main_task(void *pvParameters)
@@ -70,14 +70,14 @@ void main_task(void *pvParameters)
 				GPIO_OCTL(RESPONSE_PORT) &= ~RESPONSE_PIN; // RESET PIN TO LOW STATE
 			}
 			start_req = false;
-			_begin_responce_task = 0x00U; // A little of black magic
+			_begin_responce_task = 0x00U;
 		}
 		/*************************************************************************************************
 		 * ***********************************************************************************************
 		 * ***********************************************************************************************/
 
 		// If state of line isn't different more then _edge_cap_val, then detect error
-		if (SysTime - _last_capture_time > _edge_capture_val)
+		if (bus_error)
 		{ // Check edge states of line (connected to Vss or Vdd)
 			// disable_pwm(pwm_1);
 			reset_flags();
@@ -157,7 +157,6 @@ void main_task(void *pvParameters)
 							vTaskSuspend(response_task_handle);
 							GPIO_OCTL(RESPONSE_PORT) &= ~RESPONSE_PIN; // RESET PIN TO LOW STATE
 							start_req = false;
-							stop_req = true;
 						}
 						_valid_index = 0x00U;
 					}

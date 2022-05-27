@@ -12,7 +12,7 @@ bool isCapture = false;
 static inline void SysInit(void);
 
 uint32_t SysTime = 0x00U;
-bool start_req = false, stop_req = false, pwm_detect = false;
+bool start_req = false, bus_error = false, pwm_detect = false;
 int main()
 {
 	SysInit();

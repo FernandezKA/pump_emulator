@@ -58,6 +58,13 @@ void sample_task(void *pvParameters)
 				pwm_detect = false;
 				(GPIO_OCTL(INV_PORT) &= ~INV_PIN); //Pull down line 
 			}
+			
+			if(bus.cap_time > 2000){ //detect bus error
+				bus_error = true;
+			}
+			else{
+				bus_error = false;
+			}
 		}
 		
 		{ // Measure pwm
