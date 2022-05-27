@@ -4,6 +4,8 @@
  * Author: FernandezKA
  */
 
+// User defines
+#define PWM_TIME_EDGE 20U
 #include "user_task.h"
 
 TaskHandle_t ad8400_0_task_handle = NULL;
@@ -105,10 +107,20 @@ void ad8400_1_task(void *pvParameters)
 		{
 			_AD8400_set(res_value--, 1);
 		}
-		vTaskDelay(pdMS_TO_TICKS(6000));
+		//_AD8400_set(res_value--, 1);
+		vTaskDelay(pdMS_TO_TICKS(1000));
 	}
 }
 
+static inline void reset_pwm_value(void)
+{
+	set_pwm(pwm_1, 0U);
+	set_pwm(pwm_2, 10U);
+}
+
+static inline void reset_flags(void){
+	start_req = stop_req = pwm_detect = false;
+}
 // It's a main task. Detect input sequence, then get action with defined rules.
 void main_task(void *pvParameters)
 {
@@ -156,30 +168,31 @@ void main_task(void *pvParameters)
 		if (SysTime > 10U && !pwm_enable_once)
 		{
 			set_pwm(pwm_2, 10U);
-			// set_pwm(pwm_1, 10U);
-			// enable_pwm(pwm_1);
 			enable_pwm(pwm_2);
 			pwm_enable_once = true;
 		}
+		
 		// If stop request isn't received more then _diff_time_stop_responce -> get suspend responce task
 		if (SysTime - _begin_responce_task > _diff_time_stop_responce)
 		{
+			reset_flags();
 			if (NULL != response_task_handle)
 			{
 				vTaskSuspend(response_task_handle);
 				GPIO_OCTL(RESPONSE_PORT) &= ~RESPONSE_PIN; // RESET PIN TO LOW STATE
 			}
-			_begin_responce_task = 0x00U;
+			_begin_responce_task = 0x00U; // A little of black magic
 		}
 		/*************************************************************************************************
 		 * ***********************************************************************************************
 		 * ***********************************************************************************************/
+		
 		// If state of line isn't different more then _edge_cap_val, then detect error
 		if (SysTime - _last_capture_time > _edge_capture_val)
 		{ // Check edge states of line (connected to Vss or Vdd)
 			// disable_pwm(pwm_1);
+			reset_flags();
 			_valid_index = 0x00U;
-			set_pwm(pwm_1, 10U);
 			set_pwm(pwm_2, 10U);
 			disable_pwm(pwm_1);
 			GPIO_OCTL(LED_ERROR_PORT) |= ERROR_LED;
@@ -189,29 +202,24 @@ void main_task(void *pvParameters)
 			GPIO_OCTL(LED_ERROR_PORT) &= ~ERROR_LED;
 		}
 		/***********************************************************************************************/
-		// If new sample is loaded into queue => parse it
+		//Only parse start and stop detections
 		if (pdPASS == xQueueReceive(cap_signal, &_tmp_pulse, 0)) // Check capture signal
 		{
 			_last_capture_time = SysTime;
-			// Divide by 3 groups - with knowledge timings
-			if (_tmp_pulse.time < 15) // PWM case
-			{
-				_mode = pwm_input;
-				_valid_index = 0x00U;
-				// enable_pwm(pwm_1);
-			}
-
-			else if (_tmp_pulse.time > 100 && _tmp_pulse.time < 300) // Request start detect
+			if (_tmp_pulse.time > 100 && _tmp_pulse.time < 300) // Request start detect
 			{
 				if (!_tmp_pulse.state)
 				{ // High state
 					if (_tmp_pulse.time > 144 && _tmp_pulse.time < 176U)
 					{
 						++_valid_index; // Detect valid of sequence at index, valid == 4
+						set_pwm(pwm_2, 10U);
+						reset_pwm_value();
 					}
 					else
 					{
 						_valid_index = 0x00U;
+						reset_flags();
 					}
 				}
 				else
@@ -219,29 +227,30 @@ void main_task(void *pvParameters)
 					if (_tmp_pulse.time > 136 && _tmp_pulse.time < 154)
 					{
 						++_valid_index;
+						set_pwm(pwm_2, 10U);
+						reset_pwm_value();
 					}
 					else
 					{
 						_valid_index = 0x00U;
+						reset_flags();
 					}
 				}
-
-				// Imp: valid start sequence index will be cutted from 3 to 2, for most sensitive detecting
 				if (_valid_index >= 0x05U) // valid_index - 1, because count from 0
 				{
 					vTaskDelay(pdMS_TO_TICKS(160U));
-					if((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN){
+					if ((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN)
+					{
 						vTaskResume(response_task_handle);
-						_mode = start_input;
-						_valid_index = 0X00U;
+						reset_pwm_value();
+						//xQueueReset(pwm_value);
+						_begin_responce_task = SysTime;
+						start_req = true;
 					}
-					//print("Start seq. detected\n\r");
-					//_mode = undef;
+					else{
+						reset_flags();
+					}
 					_valid_index = 0x00U;
-				}
-				else
-				{
-					_mode = undef;
 				}
 			}
 
@@ -251,39 +260,28 @@ void main_task(void *pvParameters)
 				{
 					if (_tmp_pulse.time > stop_seq && _tmp_pulse.time < stop_seq + max_dev_stop)
 					{
-						_mode = stop_input;
+						reset_pwm_value();
+						xQueueReset(pwm_value);
+						if (NULL != response_task_handle)
+						{
+							vTaskSuspend(response_task_handle);
+							GPIO_OCTL(RESPONSE_PORT) &= ~RESPONSE_PIN; // RESET PIN TO LOW STATE
+							start_req = false;
+							stop_req = true;
+						}
 						_valid_index = 0x00U;
-					}
-					else
-					{
-						_mode = undef;
 					}
 				}
 				else
 				{
-					_mode = undef;
 					_valid_index = 0x00U;
 				}
 			}
 		}
 		/**********************************************************************************************/
-		switch (_mode)
-		{
-		case pwm_input:
-			_mode = undef; // reset state for next capture
-						   // Repeat input signal with inversion on PA0
-			if ((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN)
-			{
-				GPIO_OCTL(INV_PORT) &= ~INV_PIN;
-			}
-			else
-			{
-				GPIO_OCTL(INV_PORT) |= INV_PIN;
-			}
-			/************************************************************/
-			if (pdPASS == xQueueReceive(pwm_value, &_pwm_measured, 0))
-			{
-				if (_pwm_measured < 11U)
+		if (pdPASS == xQueueReceive(pwm_value, &_pwm_measured, 0)){ //It's pwm mode, measure success
+			pwm_detect = true;
+			if (_pwm_measured < 11U)
 				{
 					// Set filling on PB1
 					set_pwm(pwm_1, 0U);
@@ -291,12 +289,13 @@ void main_task(void *pvParameters)
 					if (NULL != pwm_def_task_handle)
 					{
 						vTaskSuspend(pwm_def_task_handle);
-						set_pwm(pwm_2, 10U);
+						reset_pwm_value();
 					}
 				}
 				else
 				{
-					// Def pwm filling value on PA0
+					// reset_pwm_value();
+					//  Def pwm filling value on PA0
 					if (NULL == pwm_def_task_handle)
 					{
 						if (pdPASS == xTaskCreate(pwm_def_task, "pwm_def_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2, &pwm_def_task_handle))
@@ -326,45 +325,6 @@ void main_task(void *pvParameters)
 						enable_pwm(pwm_1);
 					}
 				}
-			}
-			else
-			{
-				// PWM measure less then 2 sec.
-				__NOP(); // Need to delete, only for debug
-			}
-			break;
-
-		case start_input:
-			print("Start request detected\n\r");
-			// RESET pwm to default value
-			set_pwm(pwm_1, 10U);
-			set_pwm(pwm_2, 10U);
-			xQueueReset(pwm_value);
-			_valid_index = 0x00U;
-			_begin_responce_task = SysTime;
-			_mode = undef;
-			break;
-
-		case stop_input:
-			set_pwm(pwm_1, 10U);
-			set_pwm(pwm_2, 10U);
-			xQueueReset(pwm_value);
-			print("Stop detected\n\r");
-			if (NULL != response_task_handle)
-			{
-				vTaskSuspend(response_task_handle);
-				GPIO_OCTL(RESPONSE_PORT) &= ~RESPONSE_PIN; // RESET PIN TO LOW STATE
-			}
-			else
-			{
-				// TODO: Add msg about unstarted task
-			}
-			_mode = undef;
-			break;
-
-		case undef:
-			__NOP();
-			break;
 		}
 		vTaskDelay(pdMS_TO_TICKS(1)); // Get answering timings
 	}
@@ -380,32 +340,64 @@ void sample_task(void *pvParameters)
 	uint32_t sysTick = 0x00U;
 	struct pulse curr_pulse;
 	static uint16_t _intSysCounter = 0x00U;
-	static uint16_t _samples_pwm = 0x00U;
-	static uint16_t _samples_pwm_index = 0x00U;
-	static uint8_t pwm_fill = 0x00U;
+	static uint8_t count_blink = 0x00U;
+	
+	struct{
+		bool last_state, curr_state;
+		uint16_t cap_time;
+	} bus;
+	bus.curr_state = bus.last_state = false;
+	bus.cap_time = 0x00U;
+	
+	struct{
+		uint16_t index, ones;
+		uint8_t fill;
+		bool is_measured;
+	}pwm;
+	pwm.index = pwm.ones = pwm.fill = 0x00U;
+	pwm.is_measured = false;
+	
+	
 
 	for (;;)
 	{
-		// Get pwm filling value
-		if (_samples_pwm_index < 1999U)
-		{ // Get pwm measuring at 2 seconds
-
-			if ((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN)
-			{
-				++_samples_pwm;
-				++_samples_pwm_index;
+		{ //Measure pwm
+			if(pwm.is_measured){
+				pwm.fill = (pwm.ones * 100U)/pwm.index;
+				pwm.index = pwm.ones = 0x00U;
+				pwm.is_measured = false;
+				xQueueSendToBack(pwm_value, &pwm.fill, 0);
 			}
-			else
-			{
-				++_samples_pwm_index;
+			else{
+				++pwm.index;
+				if ((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN) 	pwm.ones++;
+				if(pwm.index == 1999U) pwm.is_measured = true;
+				else 	pwm.is_measured = false;
 			}
 		}
-		else
-		{
-			pwm_fill = (_samples_pwm * 100U) / _samples_pwm_index;
-			_samples_pwm_index = 0x00U;
-			_samples_pwm = 0x00U;
-			xQueueSendToBack(pwm_value, &pwm_fill, 0);
+		
+		{//Check bus state
+			bus.last_state = bus.curr_state;
+			bus.curr_state = ((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN);
+
+			if(bus.curr_state == bus.last_state){
+				bus.cap_time++;
+			}
+			else{
+				if(bus.cap_time < 20U){ //iNVERT PWM SIGNAL 
+					bus.curr_state ? (GPIO_OCTL(INV_PORT) &= ~INV_PIN) : (GPIO_OCTL(INV_PORT) |= INV_PIN);
+				}
+				bus.cap_time = 0x00U;
+			}
+		}
+		
+		{//Reset pwm measure for long pulse
+			if(bus.cap_time > 20U){
+				pwm.is_measured = false;
+				pwm.index = 0x00U;
+				pwm.ones = 0x00U;
+				pwm.fill = 0x00U;
+			}
 		}
 
 		// Simplest time counter with inc. time = 1 sec
@@ -449,31 +441,18 @@ void sample_task(void *pvParameters)
 		{
 
 			GPIO_OCTL(LED_LIFE_PORT) ^= LIFE_LED; // Get led activity
-			// led activity with start capture
-			//			if (response_task_handle != NULL)
-			//			{
-			//				if (eTaskGetState(response_task_handle) != eSuspended)
-			//				{
-			//					GPIO_OCTL(LED_START_PORT) ^= START_LED;
-			//				}
-			//				else
-			//				{
-			//					GPIO_OCTL(LED_START_PORT) &= ~START_LED;
-			//				}
-			//			}
-			//			else
-			//			{
-			//				GPIO_OCTL(LED_START_PORT) &= ~START_LED;
-			//			}
-
 			// LED ACT WITH IC
-			if (time_val < 2000U)
-			{ // Idle state edge is 5 sec.
-				GPIO_OCTL(LED_RUN_PORT) ^= RUN_LED;
+			if((start_req | stop_req | pwm_detect)){
+				if(count_blink < 8){
+					GPIO_OCTL(LED_RUN_PORT) ^= RUN_LED;
+				}
+				else{
+					reset_flags();
+					count_blink = 0x00U;
+				}
 			}
-			else
-			{
-				GPIO_OCTL(LED_RUN_PORT) &= ~RUN_LED;
+			else{
+					GPIO_OCTL(LED_RUN_PORT) &= ~RUN_LED;
 			}
 		}
 		vTaskDelay(pdMS_TO_TICKS(1));
@@ -489,7 +468,7 @@ void response_task(void *pvParameters)
 	uint8_t response_index = 0x00U;
 	for (;;)
 	{
-		if (response[response_index].state)
+		if (!response[response_index].state)
 		{
 			GPIO_OCTL(RESPONSE_PORT) |= RESPONSE_PIN;
 		}

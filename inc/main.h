@@ -53,6 +53,7 @@ void _adc_init(void);
 void _nvic_enable(void);
 
 extern uint32_t SysTime;
+extern bool start_req, stop_req, pwm_detect;
 
 extern bool isCapture;
 
