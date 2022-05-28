@@ -24,8 +24,8 @@ void ad8400_0_task(void *pvParameters)
 	for (;;)
 	{
 		// Get new measure
-		_u16Measure = adc_regular_data_read(ADC0);
-		;
+		_u16Measure = global_adc_0;
+		//_u16Measure = adc_regular_data_read(ADC0);
 		if (_adc.isFirst)
 		{ // Get mark voltage on bus
 			switch (_eStateADC)
@@ -92,5 +92,39 @@ void ad8400_1_task(void *pvParameters)
 		}
 		//_AD8400_set(res_value--, 1);
 		vTaskDelay(pdMS_TO_TICKS(1000));
+	}
+}
+
+
+/*************************************************************************************************
+ * ***********************************************************************************************
+ * ***********************************************************************************************/
+// This task used for answering value from ADC
+void adc_task(void *pvParameters)
+{
+	static uint16_t adc_value_0 = 0x00U;
+	static uint16_t adc_value_1 = 0x00U;
+	for (;;)
+	{
+		//Check conversion
+			if (adc_flag_get(ADC0, ADC_FLAG_EOC))//If conversion is complete - parse it
+			{
+				adc_flag_clear(ADC0, ADC_FLAG_EOC);
+				if (0x02 == adc_get_channel()) //Answer number of channel, then set new channel
+				{
+					adc_value_0 = adc_regular_data_read(ADC0);
+					global_adc_0 = adc_value_0>>4;
+					adc_select_channel(0x03);
+				}
+				else
+				{
+					adc_value_1 = adc_regular_data_read(ADC0);
+					global_adc_1 = adc_value_1>>4;
+					adc_select_channel(0x02);
+				}
+				//adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
+			}
+			adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
+		vTaskDelay(pdMS_TO_TICKS(50));
 	}
 }

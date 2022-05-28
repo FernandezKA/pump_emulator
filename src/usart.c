@@ -1,6 +1,7 @@
+#include "user_task.h"
 #include "usart.h"
 
-void vSendByte(uint8_t Byte)
+void vSendByte(char Byte)
 {
 	// wait, while transmit buffer isn't empty
 	while ((USART_STAT(USART_PC) & USART_STAT_TBE) != USART_STAT_TBE)
@@ -12,15 +13,65 @@ void vSendByte(uint8_t Byte)
 
 void print(char *pMsg)
 {
-	static uint8_t u8MsgSize = 0x00U;
-	static uint8_t u8MsgBuff[0xFFU]; // Max size info msg is 64 symbol
-	static char last_symbol = 0x00, curr_symbol = 0x00;
-	xQueueReset(uart_info);
-	while (u8MsgSize < 0xFFU || (last_symbol == '\n' && curr_symbol == '\r') || (last_symbol == '\r' && curr_symbol == '\n'))
-	{
-		last_symbol = curr_symbol;
-		curr_symbol = pMsg[u8MsgSize++];
-		xQueueSend(uart_info, &curr_symbol, 0);
+//	static uint8_t u8MsgSize = 0x00U;
+//	static uint8_t u8MsgBuff[0xFFU]; // Max size info msg is 64 symbol
+//	static char last_symbol = 0x00, curr_symbol = 0x00;
+//	while (u8MsgSize < 0xFFU || (last_symbol == '\n' && curr_symbol == '\r') || (last_symbol == '\r' && curr_symbol == '\n') || curr_symbol == '\0')
+//	{
+//		last_symbol = curr_symbol;
+//		curr_symbol = pMsg[u8MsgSize++];
+//		vSendByte(curr_symbol);
+//	}
+//	u8MsgSize = 0x00U;
+	static uint8_t index = 0x00U;
+	while(pMsg[index] != '\0'){
+		vSendByte(pMsg[index++]);
 	}
-	u8MsgSize = 0x00U;
+}
+
+void uart_info_task(void *pvParameters)
+{
+	static uint8_t u8Rec_Buff;
+	for (;;)
+	{
+		//taskENTER_CRITICAL();
+		//print("ADC0, ADC1:\0");
+		//print_digit(global_adc_0);
+		print_float(1.76);
+		//print_digit(global_adc_1);
+		if(bus_error){
+			print("Bus error detected\n\r");
+		}
+		if(pwm_detect){
+			print("PWM signal detected\n\r");		
+		}
+		if(start_req){
+			print("Start request detected\n\r");
+		}
+		//taskEXIT_CRITICAL();
+		vTaskDelay(pdMS_TO_TICKS(1000U)); // Check info buffer every second
+	}
+}
+
+void print_digit(char _digit){
+	char first_digit, second_digit, third_digit;
+	first_digit = (_digit/100) + '0';
+	second_digit = (_digit/10)%10 + '0';
+	third_digit = (_digit%10) + '0';
+	vSendByte(first_digit);
+	vSendByte(second_digit);
+	vSendByte(third_digit);
+	vSendByte('\n');
+}
+
+void print_float(float val){
+	char first_digit, second_digit, third_digit;
+	first_digit = (val/1) + '0';
+	second_digit = ((((uint8_t)val*10))/1)%10 + '1';
+	third_digit = ((uint8_t)(val*100)%10) + '0';
+	vSendByte(first_digit);
+	vSendByte('.');
+	vSendByte(second_digit);
+	vSendByte(third_digit);
+	vSendByte('\n');
 }

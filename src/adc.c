@@ -1,14 +1,19 @@
 #include "adc.h"
 
+float therm_res[] = {2.94, 2.34, 1.87, 1.51, 1.22, 1, 0.82, 0.68, 0.56, 0.47, 0.39, 0.33, 0.28, 0.23, 0.20}; //with step at 5 deg. 
+
 void adc_select_channel(uint8_t ch_num)
 {
 	if (ch_num == 0x02)
 	{
-		adc_regular_channel_config(ADC0, 0, ADC_CHANNEL_2, ADC_SAMPLETIME_1POINT5); // WHAT IS RANK??? (0 value)
+		ADC_RSQ2(ADC0) &= ~(1<<4|1<<3|1<<2|1<<1|1<<0);
+		ADC_RSQ2(ADC0) |= 0x02;
+		//adc_regular_channel_config(ADC0, 0, ADC_CHANNEL_2, ADC_SAMPLETIME_1POINT5); // WHAT IS RANK??? (0 value)
 	}
 	else if (ch_num == 0x03)
 	{
-		adc_regular_channel_config(ADC0, 0, ADC_CHANNEL_3, ADC_SAMPLETIME_1POINT5); // WHAT IS RANK??? (0 value)
+		ADC_RSQ2(ADC0) &= ~(1<<4|1<<3|1<<2|1<<1|1<<0);
+		ADC_RSQ2(ADC0) |= 0x03;
 	}
 	else
 	{
@@ -18,7 +23,7 @@ void adc_select_channel(uint8_t ch_num)
 
 uint8_t adc_get_channel(void)
 {
-	return (ADC_CTL0(ADC0) & 0x1F);
+	return (ADC_RSQ2(ADC0) & 0X1f);
 }
 
 uint16_t adc_get_result(void)
@@ -116,4 +121,20 @@ bool bGetMeanValue(uint32_t *_sum, uint16_t *_mean, uint8_t *_counter, uint16_t 
 uint16_t _from_voltage(float value)
 {
 	return (uint16_t)value * 1241U;
+}
+
+float _to_voltage(uint16_t val){
+	return (float) val/1241U;
+}
+
+uint8_t get_temp(float div, float* pArray){
+	uint8_t index = 0;
+	while(pArray[index] < div || index != END_TMP_ARR){
+		++index;
+	}
+	return index * 5;
+}
+
+uint16_t get_res_therm(float voltage){
+	return (uint16_t) (-1)*(1000-(-33 + 10 * voltage))/(voltage);
 }

@@ -90,9 +90,7 @@ void main_task(void *pvParameters)
 			_begin_responce_task = 0x00U;
 		}
 		/*************************************************************************************************
-		 * ***********************************************************************************************
-		 * ***********************************************************************************************/
-		/***********************************************************************************************/
+		************************************************************************************************/
 		// Only parse start and stop detections
 		if (pdPASS == xQueueReceive(cap_signal, &_tmp_pulse, 0)) // Check capture signal
 		{
@@ -175,6 +173,7 @@ void main_task(void *pvParameters)
 		/**********************************************************************************************/
 		if (pdPASS == xQueueReceive(pwm_value, &_pwm_measured, 0))
 		{ // It's pwm mode, measure success
+			measured_pwm = _pwm_measured;
 			_last_capture_time = SysTime;
 			//pwm_detect = true;
 			if (_pwm_measured < 11U)

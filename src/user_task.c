@@ -55,62 +55,6 @@ void response_task(void *pvParameters)
 /*************************************************************************************************
  * ***********************************************************************************************
  * ***********************************************************************************************/
-// This task used for answering value from ADC
-void adc_task(void *pvParameters)
-{
-	static uint16_t adc_value_0 = 0x00U;
-	static uint16_t adc_value_1 = 0x00U;
-	for (;;)
-	{
-		if (!adc_flag_get(ADC0, ADC_FLAG_STRC))
-		{
-			if (adc_flag_get(ADC0, ADC_FLAG_EOC))
-			{
-				adc_flag_clear(ADC0, ADC_FLAG_EOC);
-				if (0x02 == adc_get_channel())
-				{
-					adc_value_0 = adc_regular_data_read(ADC0);
-					adc_select_channel(0x03);
-				}
-				else
-				{
-					adc_value_1 = adc_regular_data_read(ADC0);
-					adc_select_channel(0x02);
-				}
-				adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
-			}
-		}
-		else
-		{
-			if (adc_flag_get(ADC0, ADC_FLAG_EOC))
-			{
-				adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
-			}
-		}
-		vTaskDelay(pdMS_TO_TICKS(1));
-		if (adc_flag_get(ADC0, ADC_FLAG_EOC))
-		{
-			adc_flag_clear(ADC0, ADC_FLAG_EOC);
-
-			adc_value_0 = adc_regular_data_read(ADC0);
-			adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
-		}
-		else
-		{
-			if (adc_flag_get(ADC0, ADC_FLAG_STRC))
-			{
-				adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
-			}
-			else
-			{
-				adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);
-			}
-		}
-	}
-}
-/*************************************************************************************************
- * ***********************************************************************************************
- * ***********************************************************************************************/
 // This task used for more different pwm fillings forming (begin at detect pwm_fill on pwm_in)
 void pwm_def_task(void *pvParameters)
 {
@@ -129,22 +73,6 @@ void pwm_def_task(void *pvParameters)
 /*************************************************************************************************
  * ***********************************************************************************************
  * ***********************************************************************************************/
-// This task used for send uart info messages
-void uart_info_task(void *pvParameters)
-{
-	static uint8_t u8Rec_Buff;
-	for (;;)
-	{
-		// Check fifo buff state
-		while (pdPASS == xQueueReceive(uart_info, &u8Rec_Buff, 0))
-		{
-			vSendByte(u8Rec_Buff);
-		}
-		xQueueReset(uart_info);
-		vTaskDelay(pdMS_TO_TICKS(1U)); // Check info buffer every second
-	}
-}
-
 /***********************************************
 //End of tasks functions
 ***********************************************/

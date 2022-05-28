@@ -28,6 +28,7 @@ void sample_task(void *pvParameters)
 
 	for (;;)
 	{
+		//taskENTER_CRITICAL();
 		{ // Check bus state
 			bus.last_state = bus.curr_state;
 			bus.curr_state = ((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN);
@@ -132,13 +133,14 @@ void sample_task(void *pvParameters)
 			// LED ACT WITH IC
 			if ((start_req | pwm_detect))
 			{
-					GPIO_OCTL(LED_RUN_PORT) ^= RUN_LED;
+ 					GPIO_OCTL(LED_RUN_PORT) ^= RUN_LED;
 			}
 			else
 			{
 				GPIO_OCTL(LED_RUN_PORT) &= ~RUN_LED;
 			}
 		}
+		//taskEXIT_CRITICAL();
 		vTaskDelay(pdMS_TO_TICKS(1));
 	}
 }

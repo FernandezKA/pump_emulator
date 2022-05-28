@@ -13,6 +13,8 @@ static inline void SysInit(void);
 
 uint32_t SysTime = 0x00U;
 bool start_req = false, bus_error = false, pwm_detect = false;
+uint8_t measured_pwm = 0x00U;
+uint8_t global_adc_0 = 0x00U, global_adc_1= 0x00U;
 int main()
 {
 	SysInit();
@@ -35,10 +37,13 @@ int main()
 		ERROR_HANDLER();
 	if (pdPASS != xTaskCreate(response_task, "responce_tesk", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2, &response_task_handle))
 		ERROR_HANDLER();
-	//	if (pdPASS != xTaskCreate(uart_info_task, "uart info task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &uart_info_task_handle))
-	//		ERROR_HANDLER();
+	if (pdPASS != xTaskCreate(uart_info_task, "uart info task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &uart_info_task_handle))
+		ERROR_HANDLER();
+//	if (pdPASS == xTaskCreate(pwm_def_task, "pwm_def_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2, &pwm_def_task_handle))
+//		ERROR_HANDLER();
 
 	vTaskSuspend(response_task_handle);
+	//vTaskSuspend(pwm_def_task_handle);
 	vTaskStartScheduler();
 	for (;;)
 		;

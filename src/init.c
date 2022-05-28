@@ -183,6 +183,7 @@ void _adc_init(void)
   adc_deinit(ADC0);
   adc_mode_config(ADC_MODE_FREE);
   adc_data_alignment_config(ADC0, ADC_DATAALIGN_RIGHT);                       // LSB alignment
-  adc_regular_channel_config(ADC0, 0, ADC_CHANNEL_2, ADC_SAMPLETIME_1POINT5); // WHAT IS RANK??? (0 value)
+  ADC_CTL1(ADC0) |= (1<<19|1<<18|1<<17);
+	adc_regular_channel_config(ADC0, 0, ADC_CHANNEL_3, ADC_SAMPLETIME_1POINT5); // WHAT IS RANK??? (0 value)
   adc_enable(ADC0);
 }

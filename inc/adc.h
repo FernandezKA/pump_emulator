@@ -47,4 +47,9 @@ bool bGetMeanValue(uint32_t* _sum, uint16_t* _mean, uint8_t* _counter, uint16_t 
 
 uint16_t _from_voltage(float value);
 
+#define END_TMP_ARR 15U
+
+
+extern float therm_res[]; 
+
 #endif
