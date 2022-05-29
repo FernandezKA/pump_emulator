@@ -15,6 +15,7 @@ uint32_t SysTime = 0x00U;
 bool start_req = false, bus_error = false, pwm_detect = false;
 uint8_t measured_pwm = 0x00U;
 uint8_t global_adc_0 = 0x00U, global_adc_1= 0x00U;
+struct therm_res therm_int; 
 int main()
 {
 	SysInit();
@@ -24,6 +25,7 @@ int main()
 	adc_0_val = xQueueCreate(5, sizeof(uint8_t));
 	adc_1_val = xQueueCreate(5, sizeof(uint8_t));
 	uart_info = xQueueCreate(0x40, sizeof(uint8_t));
+	reset_therm_struct(&therm_int);
 
 	if (pdPASS != xTaskCreate(main_task, "main_task", configMINIMAL_SECURE_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2, &main_task_handle))
 		ERROR_HANDLER();

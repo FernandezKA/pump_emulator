@@ -13,16 +13,6 @@ void vSendByte(char Byte)
 
 void print(char *pMsg)
 {
-//	static uint8_t u8MsgSize = 0x00U;
-//	static uint8_t u8MsgBuff[0xFFU]; // Max size info msg is 64 symbol
-//	static char last_symbol = 0x00, curr_symbol = 0x00;
-//	while (u8MsgSize < 0xFFU || (last_symbol == '\n' && curr_symbol == '\r') || (last_symbol == '\r' && curr_symbol == '\n') || curr_symbol == '\0')
-//	{
-//		last_symbol = curr_symbol;
-//		curr_symbol = pMsg[u8MsgSize++];
-//		vSendByte(curr_symbol);
-//	}
-//	u8MsgSize = 0x00U;
 	static uint8_t index = 0x00U;
 	while(pMsg[index] != '\0'){
 		vSendByte(pMsg[index++]);
@@ -67,7 +57,7 @@ void print_digit(char _digit){
 void print_float(float val){
 	char first_digit, second_digit, third_digit;
 	first_digit = (val/1) + '0';
-	second_digit = ((((uint8_t)val*10))/1)%10 + '1';
+	second_digit = (uint8_t) ((uint16_t)(val * 100)/10 % 100 + '0');
 	third_digit = ((uint8_t)(val*100)%10) + '0';
 	vSendByte(first_digit);
 	vSendByte('.');

@@ -5,6 +5,7 @@
 #define true TRUE
 #define false !true
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include "gd32f10x.h"
 #include "gd32f10x_usart.h"
@@ -56,6 +57,7 @@ extern uint32_t SysTime;
 extern bool start_req, bus_error, pwm_detect;
 extern uint8_t measured_pwm;
 extern uint8_t global_adc_0, global_adc_1;
+extern struct therm_res therm_int; 
 
 extern bool isCapture;
 

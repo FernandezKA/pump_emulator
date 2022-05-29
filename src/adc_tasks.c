@@ -120,6 +120,7 @@ void adc_task(void *pvParameters)
 				{
 					adc_value_1 = adc_regular_data_read(ADC0);
 					global_adc_1 = adc_value_1>>4;
+					add_measure(&therm_int, global_adc_1);
 					adc_select_channel(0x02);
 				}
 				//adc_software_trigger_enable(ADC0, ADC_REGULAR_CHANNEL);

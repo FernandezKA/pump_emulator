@@ -127,14 +127,57 @@ float _to_voltage(uint16_t val){
 	return (float) val/1241U;
 }
 
-uint8_t get_temp(float div, float* pArray){
-	uint8_t index = 0;
-	while(pArray[index] < div || index != END_TMP_ARR){
-		++index;
-	}
-	return index * 5;
+void add_measure(struct therm_res* xRes, uint16_t ADC_val)
+{
+ if(xRes->index_arr < 10U){
+	 xRes->samples_arr[xRes ->index_arr++] = ADC_val;
+ }
+ else{  //Get circle buffer
+	 xRes->index_arr = 0x00U;
+	 xRes->samples_arr[xRes ->index_arr++] = ADC_val;
+ }
 }
 
-uint16_t get_res_therm(float voltage){
-	return (uint16_t) (-1)*(1000-(-33 + 10 * voltage))/(voltage);
+uint16_t get_mean_therm(struct therm_res* xRes)
+{
+ static uint32_t _sum = 0x00U;
+	for(uint8_t i = 0; i < 10U; ++i){
+		 _sum  += xRes->samples_arr[i];
+	}
+	return (uint16_t) _sum / 10U;
+}
+
+float get_div_coeff(struct therm_res* xRes)
+{
+	return (float) (10000U)/(10000U + xRes->res_value); 
+}
+
+uint16_t get_resistance(struct therm_res* xRes){
+	uint16_t res_out;
+	float v_ref, v_out;
+	if(xRes->v_out != 0){
+	res_out = (33000 - 10000 * xRes->v_out)/(xRes -> v_out);
+	}
+	else{
+		 res_out = 0;
+	}
+	return res_out; 
+}
+
+void get_temp_int_conversion(struct therm_res* xRes)
+{
+	xRes->v_out = _to_voltage(get_mean_therm(xRes));
+	xRes->res_value = get_resistance(xRes);
+	xRes->div_coeff = get_div_coeff(xRes);
+}
+
+void reset_therm_struct(struct therm_res* xRes){
+	 xRes->div_coeff = 0x00U; 
+	xRes->index_arr = 0x00U; 
+	xRes ->res_value = 0x00U; 
+	for(uint8_t i = 0; i < 10U; ++i){
+	xRes ->samples_arr[i]= 0U;
+	}
+	xRes->temp = 0x00U;
+	xRes->v_out = 0;
 }

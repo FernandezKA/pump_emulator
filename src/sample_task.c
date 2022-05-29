@@ -42,7 +42,7 @@ void sample_task(void *pvParameters)
 				if (bus.cap_time < 15U)
 				{ // iNVERT PWM SIGNAL
 					bus.curr_state ? (GPIO_OCTL(INV_PORT) &= ~INV_PIN) : (GPIO_OCTL(INV_PORT) |= INV_PIN);
-					pwm_detect = TRUE;
+					pwm_detect = true;
 				}
 				bus.cap_time = 0x00U;
 			}
