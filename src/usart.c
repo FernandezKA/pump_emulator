@@ -25,9 +25,8 @@ void uart_info_task(void *pvParameters)
 	for (;;)
 	{
 		//taskENTER_CRITICAL();
-		//print("ADC0, ADC1:\0");
-		//print_digit(global_adc_0);
-		print_float(1.76);
+		print("Temp: ");
+		print_digit(therm_int.temp);
 		//print_digit(global_adc_1);
 		if(bus_error){
 			print("Bus error detected\n\r");
@@ -38,6 +37,11 @@ void uart_info_task(void *pvParameters)
 		if(start_req){
 			print("Start request detected\n\r");
 		}
+		taskENTER_CRITICAL();
+		get_temp_int_conversion(&therm_int);
+		taskEXIT_CRITICAL();
+		
+		
 		//taskEXIT_CRITICAL();
 		vTaskDelay(pdMS_TO_TICKS(1000U)); // Check info buffer every second
 	}
@@ -56,9 +60,10 @@ void print_digit(char _digit){
 
 void print_float(float val){
 	char first_digit, second_digit, third_digit;
-	first_digit = (val/1) + '0';
-	second_digit = (uint8_t) ((uint16_t)(val * 100)/10 % 100 + '0');
-	third_digit = ((uint8_t)(val*100)%10) + '0';
+	uint8_t _digit = (uint8_t) (val * (float)100);
+	first_digit = (_digit/100) + '0';
+	second_digit = (_digit/10)%10 + '0';
+	third_digit = (_digit%10) + '0';
 	vSendByte(first_digit);
 	vSendByte('.');
 	vSendByte(second_digit);

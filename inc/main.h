@@ -5,7 +5,7 @@
 #define true TRUE
 #define false !true
 #include <stdlib.h>
-#include <stdbool.h>
+//#include <stdbool.h>
 
 #include "gd32f10x.h"
 #include "gd32f10x_usart.h"

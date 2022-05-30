@@ -48,25 +48,24 @@ bool bGetMeanValue(uint32_t* _sum, uint16_t* _mean, uint8_t* _counter, uint16_t 
 
 //internal thermoresistor 
 
+extern float therm_res[]; 
+
 struct therm_res{
 	uint8_t index_arr;
 	uint16_t samples_arr[10U];
-	uint16_t res_value; 
 	float div_coeff; 
 	float v_out;
 	uint8_t temp; 
 };
 
+uint16_t _from_voltage(float value);
+
 void add_measure(struct therm_res* xRes, uint16_t ADC_val);
 uint16_t get_mean_therm(struct therm_res* xRes);
 float get_div_coeff(struct therm_res* xRes);
-uint16_t get_resistance(struct therm_res* xRes);
-
-uint16_t _from_voltage(float value);
-
 void get_temp_int_conversion(struct therm_res* xRes);
-
 void reset_therm_struct(struct therm_res* xRes);
+uint8_t get_temp(struct therm_res* xRes);
 
 
 #endif
