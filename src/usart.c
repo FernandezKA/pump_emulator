@@ -13,9 +13,13 @@ void vSendByte(char Byte)
 
 void print(char *pMsg)
 {
-	static uint8_t index = 0x00U;
-	while(pMsg[index] != '\0'){
-		vSendByte(pMsg[index++]);
+	volatile uint8_t _index = 0;
+	volatile char last_symbol = 0x00, curr_symbol = 0x00;
+	xQueueReset(uart_info);
+	while((_index < 0x80U) && !(last_symbol == 0x0A && curr_symbol == 0x0D) && !(last_symbol == 0x0D && curr_symbol == 0x0A)){
+		last_symbol = curr_symbol;
+		curr_symbol = pMsg[_index++];
+		vSendByte(curr_symbol);
 	}
 }
 
@@ -24,10 +28,13 @@ void uart_info_task(void *pvParameters)
 	static uint8_t u8Rec_Buff;
 	for (;;)
 	{
-		//taskENTER_CRITICAL();
-		print("Temp: ");
+		get_temp_int_conversion(&therm_int);
+		
+		
+		print("Temperature from the thermistor: \n\r");
 		print_digit(therm_int.temp);
 		//print_digit(global_adc_1);
+		print("Device state: \n\r");
 		if(bus_error){
 			print("Bus error detected\n\r");
 		}
@@ -37,12 +44,7 @@ void uart_info_task(void *pvParameters)
 		if(start_req){
 			print("Start request detected\n\r");
 		}
-		taskENTER_CRITICAL();
-		get_temp_int_conversion(&therm_int);
-		taskEXIT_CRITICAL();
-		
-		
-		//taskEXIT_CRITICAL();
+		vSendByte('\n');
 		vTaskDelay(pdMS_TO_TICKS(1000U)); // Check info buffer every second
 	}
 }
@@ -56,6 +58,7 @@ void print_digit(char _digit){
 	vSendByte(second_digit);
 	vSendByte(third_digit);
 	vSendByte('\n');
+	vSendByte('\r');
 }
 
 void print_float(float val){
@@ -69,4 +72,5 @@ void print_float(float val){
 	vSendByte(second_digit);
 	vSendByte(third_digit);
 	vSendByte('\n');
+	vSendByte('\r');
 }
