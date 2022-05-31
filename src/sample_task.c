@@ -2,7 +2,6 @@
 // This task answering request pin, and send samples into queue in main process. Also used for blink led
 void sample_task(void *pvParameters)
 {
-	bool last_state, curr_state = false;
 	uint16_t time_val = 0x00U;
 	uint32_t sysTick = 0x00U;
 	struct pulse curr_pulse;
@@ -15,23 +14,29 @@ void sample_task(void *pvParameters)
 		uint16_t cap_time;
 	} bus;
 	bus.curr_state = bus.last_state = false;
-	bus.cap_time = 0x20U;
-
-	struct
-	{
-		uint16_t index, ones;
-		uint8_t fill;
-		bool is_measured;
-	} pwm;
-	pwm.index = pwm.ones = pwm.fill = 0x00U;
-	pwm.is_measured = false;
+	bus.cap_time = 0x00U;
+	uint16_t pwm_cap_time = 0x00U;
 
 	for (;;)
 	{
-		//taskENTER_CRITICAL();
+		add_sample_pwm(&PWM);
+		(check_pwm_valid(&PWM_VALIDATOR, bus.cap_time)) ? (pwm_detect = true) : (pwm_detect = false);
 		{ // Check bus state
 			bus.last_state = bus.curr_state;
 			bus.curr_state = ((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN);
+			
+			if(pwm_detect){
+					if(PWM.is_measured){
+						get_pwm_action(get_pwm_fill(&PWM));
+						pwm_cap_time = SysTime;
+					}
+			}
+			else{
+					if(SysTime - pwm_cap_time > 2U){
+					get_pwm_error_action();
+					get_clear_pwm_measure(&PWM);
+					}
+			}
 
 			if (bus.curr_state == bus.last_state)
 			{
@@ -39,53 +44,34 @@ void sample_task(void *pvParameters)
 			}
 			else
 			{
-				if (bus.cap_time < 15U)
-				{ // iNVERT PWM SIGNAL
-					bus.curr_state ? (GPIO_OCTL(INV_PORT) &= ~INV_PIN) : (GPIO_OCTL(INV_PORT) |= INV_PIN);
-					pwm_detect = true;
+				// Check pwm valid value (on 10 edges)
+				if (check_pwm_valid(&PWM_VALIDATOR, bus.cap_time))
+				{
+					get_invert(bus.curr_state);
+				}
+				else
+				{
+					get_invert(true); // pull down invert line
+				}
+				// Send into main parser
+				if (bus.cap_time > 100U)
+				{ // Not send short pulse for analyzing
+					xQueueSendToBack(cap_signal, &((struct pulse){.state = bus.curr_state, .time = bus.cap_time}), 0);
 				}
 				bus.cap_time = 0x00U;
 			}
 		}
 
 		{ // Reset pwm measure for long pulse
-			if (bus.cap_time > 15U)
-			{
-				pwm.is_measured = false;
-				pwm.index = 0x00U;
-				pwm.ones = 0x00U;
-				pwm.fill = 0x00U;
-				xQueueSendToBack(pwm_value, &pwm.fill, 0);
-				pwm_detect = false;
-				(GPIO_OCTL(INV_PORT) &= ~INV_PIN); //Pull down line 
-				disable_pwm(pwm_1);
-			}
-			
-			if(bus.cap_time > 2000){ //detect bus error
+
+			if (bus.cap_time > 2000)
+			{ // detect bus error
 				bus_error = true;
-			}
-			else{
-				bus_error = false;
-			}
-		}
-		
-		{ // Measure pwm
-			if (pwm.is_measured)
-			{
-				pwm.fill = (pwm.ones * 100U) / pwm.index;
-				pwm.index = pwm.ones = 0x00U;
-				pwm.is_measured = false;
-				xQueueSendToBack(pwm_value, &pwm.fill, 0);
+				get_pwm_error_action();
 			}
 			else
 			{
-				++pwm.index;
-				if ((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN)
-					pwm.ones++;
-				if (pwm.index == 1999U)
-					pwm.is_measured = true;
-				else
-					pwm.is_measured = false;
+				bus_error = false;
 			}
 		}
 
@@ -99,48 +85,30 @@ void sample_task(void *pvParameters)
 		{
 			++_intSysCounter;
 		}
-		// Detect type of input signal
-		//  Upd variables
-		last_state = curr_state;
+
 		++sysTick;
-		// Sample input signal
-		if ((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN)
-		{
-			curr_state = true;
-		}
-		else
-		{
-			curr_state = false;
-		}
-		// Check switch from low -> hight, or reversed
-		if (last_state == curr_state)
-		{
-			time_val++;
-		}
-		else
-		{
-			// Send pulse on queue,will be received on main process
-			xQueueSendToBack(cap_signal, &((struct pulse){.state = curr_state, .time = time_val}), 0);
-			isCapture = true;
-			time_val = 0x00U;
-		}
 
 		// LED activity, blink every second
 		if ((sysTick % 250) == 0U)
 		{
-
-			GPIO_OCTL(LED_LIFE_PORT) ^= LIFE_LED; // Get led activity
-			// LED ACT WITH IC
-			if ((start_req | pwm_detect))
-			{
- 					GPIO_OCTL(LED_RUN_PORT) ^= RUN_LED;
-			}
-			else
-			{
-				GPIO_OCTL(LED_RUN_PORT) &= ~RUN_LED;
-			}
+			get_blink();
 		}
-		//taskEXIT_CRITICAL();
+		// taskEXIT_CRITICAL();
 		vTaskDelay(pdMS_TO_TICKS(1));
+		//taskYIELD();
+	}
+}
+
+void get_blink(void)
+{
+	GPIO_OCTL(LED_LIFE_PORT) ^= LIFE_LED; // Get led activity
+	// LED ACT WITH IC
+	if ((start_req | pwm_detect))
+	{
+		GPIO_OCTL(LED_RUN_PORT) ^= RUN_LED;
+	}
+	else
+	{
+		GPIO_OCTL(LED_RUN_PORT) &= ~RUN_LED;
 	}
 }

@@ -61,4 +61,5 @@ extern struct therm_res therm_int;
 
 extern bool isCapture;
 
+void get_blink(void);
 #endif

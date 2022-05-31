@@ -3,6 +3,7 @@
 
 #include "main.h"
 #include "usart.h"
+#include "pwm.h"
 
 enum work_mode
 {

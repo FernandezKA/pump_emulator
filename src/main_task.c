@@ -129,20 +129,19 @@ void main_task(void *pvParameters)
 				}
 				if (_valid_index >= 0x05U) // valid_index - 1, because count from 0
 				{
-					vTaskDelay(pdMS_TO_TICKS(146U));
+					vTaskDelay(pdMS_TO_TICKS(146U)); //check state on bus on edge + time - dev
 					if ((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN)
 					{
 						vTaskResume(response_task_handle);
 						reset_pwm_value();
-						// xQueueReset(pwm_value);
 						_begin_responce_task = SysTime;
 						start_req = true;
 					}
 					else
 					{
 						start_req = false;
-						//reset_flags();
 					}
+					GPIO_OCTL(RESPONSE_PORT) &= ~RESPONSE_PIN; // RESET PIN TO LOW STATE
 					_valid_index = 0x00U;
 				}
 			}
@@ -158,9 +157,9 @@ void main_task(void *pvParameters)
 						if (NULL != response_task_handle)
 						{
 							vTaskSuspend(response_task_handle);
-							GPIO_OCTL(RESPONSE_PORT) &= ~RESPONSE_PIN; // RESET PIN TO LOW STATE
 							start_req = false;
 						}
+						GPIO_OCTL(RESPONSE_PORT) &= ~RESPONSE_PIN; // RESET PIN TO LOW STATE
 						_valid_index = 0x00U;
 					}
 				}
@@ -193,7 +192,7 @@ void main_task(void *pvParameters)
 				//  Def pwm filling value on PA0
 				if (NULL == pwm_def_task_handle)
 				{
-					if (pdPASS == xTaskCreate(pwm_def_task, "pwm_def_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 2, &pwm_def_task_handle))
+					if (pdPASS == xTaskCreate(pwm_def_task, "pwm_def_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &pwm_def_task_handle))
 					{
 						__NOP();
 					}
