@@ -3,9 +3,8 @@
 QueueHandle_t pwm_value;
 QueueHandle_t cap_signal;
 QueueHandle_t sig_gen_flag;
-QueueHandle_t adc_0_val;
+QueueHandle_t adc_0;
 QueueHandle_t adc_1_val;
-QueueHandle_t uart_info;
 
 bool isCapture = false;
 
@@ -14,7 +13,6 @@ static inline void SysInit(void);
 uint32_t SysTime = 0x00U;
 bool start_req = false, bus_error = false, pwm_detect = false;
 uint8_t measured_pwm = 0x00U;
-uint8_t global_adc_0 = 0x00U, global_adc_1= 0x00U;
 //User struct for periph 
 struct pwm PWM;
 struct pwm_validator PWM_VALIDATOR;
@@ -22,12 +20,8 @@ struct therm_res therm_int;
 int main()
 {
 	SysInit();
-	pwm_value = xQueueCreate(1, sizeof(uint8_t));
-	cap_signal = xQueueCreate(1, sizeof(struct pulse));
-	sig_gen_flag = xQueueCreate(1, sizeof(bool));
-	adc_0_val = xQueueCreate(5, sizeof(uint8_t));
-	adc_1_val = xQueueCreate(5, sizeof(uint8_t));
-	uart_info = xQueueCreate(0x40, sizeof(uint8_t));
+	cap_signal = xQueueCreate(10, sizeof(struct pulse));
+	adc_0 = xQueueCreate(10, sizeof(uint16_t));
 	reset_therm_struct(&therm_int);
 
 	if (pdPASS != xTaskCreate(main_task, "main_task", configMINIMAL_SECURE_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &main_task_handle))
@@ -44,11 +38,7 @@ int main()
 		ERROR_HANDLER();
 	if (pdPASS != xTaskCreate(uart_info_task, "uart info task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &uart_info_task_handle))
 		ERROR_HANDLER();
-//	if (pdPASS == xTaskCreate(pwm_def_task, "pwm_def_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &pwm_def_task_handle))
-//		ERROR_HANDLER();
-
 	vTaskSuspend(response_task_handle);
-//	vTaskSuspend(pwm_def_task_handle);
 	vTaskStartScheduler();
 	for (;;)
 		;

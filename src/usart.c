@@ -15,7 +15,6 @@ void print(char *pMsg)
 {
 	volatile uint8_t _index = 0;
 	volatile char last_symbol = 0x00, curr_symbol = 0x00;
-	xQueueReset(uart_info);
 	while ((_index < 0x80U) && !(last_symbol == 0x0A && curr_symbol == 0x0D) && !(last_symbol == 0x0D && curr_symbol == 0x0A))
 	{
 		last_symbol = curr_symbol;

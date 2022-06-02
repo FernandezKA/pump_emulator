@@ -1,14 +1,4 @@
 #include "user_task.h"
-void reset_pwm_value(void)
-{
-	set_pwm(pwm_1, 0U);
-	set_pwm(pwm_2, 10U);
-}
-
-void reset_flags(void)
-{
-	start_req = bus_error = pwm_detect = false;
-}
 
 void main_task(void *pvParameters)
 {
@@ -28,14 +18,7 @@ void main_task(void *pvParameters)
 	// Used for action with timout
 	static uint32_t _begin_responce_task = 0x00U;
 	const uint32_t _diff_time_stop_responce = 0x14U;
-	// Used for detect empty line (connected to Vss or Vdd)
-	static uint32_t _last_capture_time = 0x00U;
-	const static uint32_t _edge_capture_val = 0x02U;
-	// This variable for input measured pwm_value
-	static uint8_t _pwm_measured = 0x00U;
-	// For value from ADC
-	// set_pwm(pwm_1, 0x0AU);
-	// enable_pwm(pwm_1);
+
 	disable_pwm(pwm_1);
 	static bool pwm_enable_once = false;
 	static bool pwm_main_enable = false;
@@ -45,23 +28,7 @@ void main_task(void *pvParameters)
 	 * ***********************************************************************************************/
 	for (;;)
 	{
-		
-		
-		// If state of line isn't different more then _edge_cap_val, then detect error
-		if (bus_error)
-		{ // Check edge states of line (connected to Vss or Vdd)
-			// disable_pwm(pwm_1);
-			//reset_flags();
-			_valid_index = 0x00U;
-			set_pwm(pwm_2, 10U);
-			disable_pwm(pwm_1);
-			GPIO_OCTL(LED_ERROR_PORT) |= ERROR_LED;
-		}
-		else
-		{
-			GPIO_OCTL(LED_ERROR_PORT) &= ~ERROR_LED;
-		}
-		
+		(bus_error) ? (GPIO_OCTL(LED_ERROR_PORT) |= ERROR_LED):(GPIO_OCTL(LED_ERROR_PORT) &= ~ERROR_LED);		
 		// First pwm enable
 		if (SysTime > 2U && !pwm_main_enable)
 		{
@@ -76,6 +43,11 @@ void main_task(void *pvParameters)
 			enable_pwm(pwm_2);
 			pwm_enable_once = true;
 		}
+
+		if(_valid_index > 0U){
+			get_clear_pwm_measure(&PWM);
+			get_pwm_error_action();
+		} 
 
 		// If stop request isn't received more then _diff_time_stop_responce -> get suspend responce task
 		if (SysTime - _begin_responce_task > _diff_time_stop_responce)
@@ -94,7 +66,6 @@ void main_task(void *pvParameters)
 		// Only parse start and stop detections
 		if (pdPASS == xQueueReceive(cap_signal, &_tmp_pulse, 0)) // Check capture signal
 		{
-			_last_capture_time = SysTime;
 			if (_tmp_pulse.time > 100 && _tmp_pulse.time < 300) // Request start detect
 			{
 				if (!_tmp_pulse.state)
@@ -102,13 +73,10 @@ void main_task(void *pvParameters)
 					if (_tmp_pulse.time > 144 && _tmp_pulse.time < 176U)
 					{
 						++_valid_index; // Detect valid of sequence at index, valid == 4
-						set_pwm(pwm_2, 10U);
-						reset_pwm_value();
 					}
 					else
 					{
 						_valid_index = 0x00U;
-						//reset_flags();
 						start_req = false;
 					}
 				}
@@ -117,14 +85,11 @@ void main_task(void *pvParameters)
 					if (_tmp_pulse.time > 136 && _tmp_pulse.time < 154)
 					{
 						++_valid_index;
-						set_pwm(pwm_2, 10U);
-						reset_pwm_value();
 					}
 					else
 					{
 						_valid_index = 0x00U;
 						start_req = false;
-						//reset_flags();
 					}
 				}
 				if (_valid_index >= 0x05U) // valid_index - 1, because count from 0
@@ -133,7 +98,6 @@ void main_task(void *pvParameters)
 					if ((GPIO_ISTAT(SAMPLE_PORT) & SAMPLE_PIN) == SAMPLE_PIN)
 					{
 						vTaskResume(response_task_handle);
-						reset_pwm_value();
 						_begin_responce_task = SysTime;
 						start_req = true;
 					}
@@ -152,8 +116,9 @@ void main_task(void *pvParameters)
 				{
 					if (_tmp_pulse.time > stop_seq && _tmp_pulse.time < stop_seq + max_dev_stop)
 					{
-						reset_pwm_value();
-						xQueueReset(pwm_value);
+						//This case not depend on valid_index, because pwm action handled here
+						get_clear_pwm_measure(&PWM);
+						get_pwm_error_action();
 						if (NULL != response_task_handle)
 						{
 							vTaskSuspend(response_task_handle);
@@ -170,56 +135,6 @@ void main_task(void *pvParameters)
 			}
 		}
 		/**********************************************************************************************/
-		if (pdPASS == xQueueReceive(pwm_value, &_pwm_measured, 0))
-		{ // It's pwm mode, measure success
-			measured_pwm = _pwm_measured;
-			_last_capture_time = SysTime;
-			//pwm_detect = true;
-			if (_pwm_measured < 11U)
-			{
-				// Set filling on PB1
-				set_pwm(pwm_1, 0U);
-				// Set filling on PA0
-				if (NULL != pwm_def_task_handle)
-				{
-					vTaskSuspend(pwm_def_task_handle);
-					reset_pwm_value();
-				}
-			}
-			else
-			{
-				// reset_pwm_value();
-				//  Def pwm filling value on PA0
-				if (NULL == pwm_def_task_handle)
-				{
-					if (pdPASS == xTaskCreate(pwm_def_task, "pwm_def_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &pwm_def_task_handle))
-					{
-						__NOP();
-					}
-				}
-				else
-				{
-					vTaskResume(pwm_def_task_handle);
-				}
-				// Def pwm_12 value
-				if (_pwm_measured < 41U)
-				{
-					set_pwm(pwm_1, 30U);
-				}
-				else if (_pwm_measured < 81U)
-				{
-					set_pwm(pwm_1, 50U);
-				}
-				else
-				{
-					set_pwm(pwm_1, 80U);
-				}
-				if (pwm_enable_once)
-				{
-					enable_pwm(pwm_1);
-				}
-			}
-		}
 		vTaskDelay(pdMS_TO_TICKS(1)); // Get answering timings
 	}
 }

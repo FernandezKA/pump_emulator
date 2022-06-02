@@ -58,7 +58,7 @@ void get_pwm_error_action(void)
 	}
 	disable_pwm(pwm_1);
 	// Set default value on pwm_1
-	set_pwm(10U, pwm_2);
+	set_pwm(pwm_2, 10U);
 }
 
 void get_pwm_action(uint8_t _pwm_fill)

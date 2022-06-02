@@ -39,9 +39,8 @@ extern TaskHandle_t pwm_def_task_handle;
 extern TaskHandle_t uart_info_task_handle;
 
 // queues for tasks
-extern QueueHandle_t pwm_value;
 extern QueueHandle_t cap_signal;
-extern QueueHandle_t uart_info;
+extern QueueHandle_t adc_0;
 
 void reset_pwm_value(void);
 void reset_flags(void);

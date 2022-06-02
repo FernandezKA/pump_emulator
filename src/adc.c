@@ -131,7 +131,7 @@ float _to_voltage(uint16_t val){
 /************************************************************
 *****THIS SECTION FOR THERMAL RESISTOR PARSER****************
 ************************************************************/
-
+//Add new samples to the circle buffer
 void add_measure(struct therm_res* xRes, uint16_t ADC_val)
 {
  if(xRes->index_arr < 10U){
@@ -142,7 +142,7 @@ void add_measure(struct therm_res* xRes, uint16_t ADC_val)
 	 xRes->samples_arr[xRes ->index_arr++] = ADC_val;
  }
 }
-
+//Return mean value on ADC format
 uint16_t get_mean_therm(struct therm_res* xRes)
 {
  volatile uint32_t _sum;
@@ -152,19 +152,19 @@ _sum = 0x00U;
 	}
 	return (uint16_t) _sum / 10U;
 }
-
+//Return divide coefficient for resistive divider
 float get_div_coeff(struct therm_res* xRes)
 {
 	return (float) (3.3F/2)/xRes->v_out; 
 }
-
+//Combine all steps of conversion from voltage to temp
 void get_temp_int_conversion(struct therm_res* xRes)
 {
 	xRes->v_out = _to_voltage(get_mean_therm(xRes));
 	xRes->div_coeff = get_div_coeff(xRes);
 	xRes->temp = get_temp(xRes);
 }
-
+//Reset all fields to default value
 void reset_therm_struct(struct therm_res* xRes){
 	 xRes->div_coeff = 0x00U; 
 	xRes->index_arr = 0x00U; 
@@ -174,7 +174,7 @@ void reset_therm_struct(struct therm_res* xRes){
 	xRes->temp = 0x00U;
 	xRes->v_out = 0;
 }
-
+//Convert value from voltage to temperature
 uint8_t get_temp(struct therm_res* xRes){
 	uint8_t index_arr = 0;
 	while(index_arr < sizeof(xRes->div_coeff)/sizeof(float) || xRes->div_coeff < therm_res[index_arr]){
