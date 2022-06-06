@@ -90,8 +90,8 @@ void ad8400_1_task(void *pvParameters)
 		{
 			_AD8400_set(res_value--, 1);
 		}
-		//_AD8400_set(res_value--, 1);
-		vTaskDelay(pdMS_TO_TICKS(1000));
+//		_AD8400_set(res_value--, 1);
+		vTaskDelay(pdMS_TO_TICKS(100));
 	}
 }
 // This task used for measure value on ADC

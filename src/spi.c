@@ -43,6 +43,7 @@ void _spi_sendbyte(unsigned char d)
     {
       GPIO_OCTL(SPI_PORT) &= ~SPI_SDI;
     }
+		
     GPIO_OCTL(SPI_PORT) |= SPI_SCK;
 
     d <<= 1;
