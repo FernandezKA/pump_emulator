@@ -9,16 +9,16 @@ QueueHandle_t adc_1_val;
 bool isCapture = false;
 
 static inline void SysInit(void);
+static inline void irq_enable(void);
 
 uint32_t SysTime = 0x00U;
 bool start_req = false, bus_error = false, pwm_detect = false;
 uint8_t measured_pwm = 0x00U;
 //User struct for periph 
 struct pwm PWM;
-struct pwm_validator PWM_VALIDATOR;
 struct therm_res therm_int; 
 int main()
-{
+ {
 	SysInit();
 	cap_signal = xQueueCreate(10, sizeof(struct pulse));
 	adc_0 = xQueueCreate(10, sizeof(uint16_t));
@@ -39,6 +39,7 @@ int main()
 	if (pdPASS != xTaskCreate(uart_info_task, "uart info task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &uart_info_task_handle))
 		ERROR_HANDLER();
 	vTaskSuspend(response_task_handle);
+	irq_enable();
 	vTaskStartScheduler();
 	for (;;)
 		;
@@ -51,8 +52,9 @@ static inline void SysInit(void)
 	_gpio_init();
 	_usart_init();
 	_tim0_init();//INPUT CAPTURE REQUEST
+	_tim1_init(); //PWM generation
 	_tim2_init();//PWM GENERATION
-	_tim3_init();//PWM GENERATION
+	//_tim3_init();//PWM GENERATION
 	_adc_init();
 }
 
@@ -62,4 +64,9 @@ void ERROR_HANDLER(void)
 	{
 		__NOP();
 	}
+}
+
+static inline void irq_enable(void){
+	nvic_irq_enable(TIMER0_Channel_IRQn, 9, 9);
+	NVIC_SetPriorityGrouping(0);
 }

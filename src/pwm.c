@@ -27,28 +27,6 @@ void get_clear_pwm_measure(struct pwm *xPWM)
 	xPWM->is_measured = false;
 }
 
-bool check_pwm_valid(struct pwm_validator *xPWM_VAL, uint16_t _cap_time)
-{
-	if (_cap_time < 10U)
-	{
-		if (xPWM_VAL->valid_index < 0xFF)
-		{
-			xPWM_VAL->valid_index++;
-		}
-	}
-	else
-	{
-		if (xPWM_VAL->valid_index > 0)
-		{
-			xPWM_VAL->valid_index--;
-		}
-	}
-
-	(xPWM_VAL->valid_index > 0x80U) ? (xPWM_VAL->is_valid = true) : (xPWM_VAL->is_valid = false);
-
-	return xPWM_VAL->is_valid;
-}
-
 void get_pwm_error_action(void)
 {
 	//  Stop generation on pwm_2
@@ -56,9 +34,9 @@ void get_pwm_error_action(void)
 	{
 		vTaskSuspend(pwm_def_task_handle);
 	}
-	disable_pwm(pwm_1);
+	disable_pwm(pwm_2);
 	// Set default value on pwm_1
-	set_pwm(pwm_2, 10U);
+	set_pwm(pwm_1, 10U);
 }
 
 void get_pwm_action(uint8_t _pwm_fill)
@@ -78,21 +56,20 @@ void get_pwm_action(uint8_t _pwm_fill)
 		{
 			vTaskResume(pwm_def_task_handle);
 		}
-		if(SysTime > 10U){
-			enable_pwm(pwm_2);
-		}
-		enable_pwm(pwm_1);
+		//enable_pwm(pwm_1);
+		enable_pwm(pwm_2);
+		
 		if (_pwm_fill < 41U)
 		{
-			set_pwm(pwm_1, 30U);
+			set_pwm(pwm_2, 30U);
 		}
 		else if (_pwm_fill < 81U)
 		{
-			set_pwm(pwm_1, 50U);
+			set_pwm(pwm_2, 50U);
 		}
 		else
 		{
-			set_pwm(pwm_1, 80U);
+			set_pwm(pwm_2, 80U);
 		}
 	}
 }
