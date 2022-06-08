@@ -2,6 +2,7 @@
 
 void _spi_start(uint8_t dev)
 {
+  //select device on NSS line
   if (0x00 == dev)
   {
     GPIO_OCTL(SPI_NSS_PORT) &= ~SPI_NSS_0;
@@ -10,6 +11,7 @@ void _spi_start(uint8_t dev)
   {
     GPIO_OCTL(SPI_NSS_PORT) &= ~SPI_NSS_1;
   }
+  //Reset clk 
   GPIO_OCTL(SPI_PORT) &= ~SPI_SCK;
 }
 void _spi_stop(uint8_t dev)
@@ -22,6 +24,7 @@ void _spi_stop(uint8_t dev)
   {
     GPIO_OCTL(SPI_NSS_PORT) |= SPI_NSS_1;
   }
+  //Reset clk
   GPIO_OCTL(SPI_PORT) &= ~SPI_SCK;
 }
 void _spi_sendbyte(unsigned char d)
@@ -35,6 +38,7 @@ void _spi_sendbyte(unsigned char d)
   }
   for (i = 0; i < 8; i++)
   {
+    //Get MSB bit to out
     if (d & 0x80)
     {
       GPIO_OCTL(SPI_PORT) |= SPI_SDI;
@@ -43,11 +47,14 @@ void _spi_sendbyte(unsigned char d)
     {
       GPIO_OCTL(SPI_PORT) &= ~SPI_SDI;
     }
-		
+		//Reset clk signal 
     GPIO_OCTL(SPI_PORT) |= SPI_SCK;
-
-    d <<= 1;
+    //Shift value for next using
+    d <<= 1;  
+    //Lath value at rising edge clk
     GPIO_OCTL(SPI_PORT) &= ~SPI_SCK;
+    //Delay can be removed
+    for(uint8_t i = 0; i < 0xFF; ++i) {__NOP();}
   }
 }
 void _AD8400_set(unsigned char voltage_step, uint8_t dev)

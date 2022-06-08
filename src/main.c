@@ -23,7 +23,6 @@ int main()
 	cap_signal = xQueueCreate(10, sizeof(struct pulse));
 	adc_0 = xQueueCreate(10, sizeof(uint16_t));
 	reset_therm_struct(&therm_int);
-
 	if (pdPASS != xTaskCreate(main_task, "main_task", configMINIMAL_SECURE_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &main_task_handle))
 		ERROR_HANDLER();
 	if (pdPASS != xTaskCreate(sample_task, "sample_task", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, &sample_task_handle))
@@ -54,7 +53,6 @@ static inline void SysInit(void)
 	_tim0_init();//INPUT CAPTURE REQUEST
 	_tim1_init(); //PWM generation
 	_tim2_init();//PWM GENERATION
-	//_tim3_init();//PWM GENERATION
 	_adc_init();
 }
 

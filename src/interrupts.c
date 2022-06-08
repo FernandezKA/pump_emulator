@@ -25,8 +25,6 @@ void TIMER0_Channel_IRQHandler(void)
 		
 	}
 	
-	//Clear all of flags
-//	TIMER_INTF(TIMER0) = 0x00U;
 	
 	if(cap_pulse.time < 100U){
 		get_invert(!cap_pulse.state);

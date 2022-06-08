@@ -45,8 +45,8 @@ void main_task(void *pvParameters)
 
 		if (SysTime > 10U && !pwm_enable_once)
 		{
-			set_pwm(pwm_2, 10U);
-			enable_pwm(pwm_2);
+			set_pwm(pwm_1, 10U);
+			enable_pwm(pwm_1);
 			pwm_enable_once = true;
 		}
 

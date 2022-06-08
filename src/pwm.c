@@ -56,8 +56,8 @@ void get_pwm_action(uint8_t _pwm_fill)
 		{
 			vTaskResume(pwm_def_task_handle);
 		}
-		//enable_pwm(pwm_1);
-		enable_pwm(pwm_2);
+		enable_pwm(pwm_1);
+		//enable_pwm(pwm_2);
 		
 		if (_pwm_fill < 41U)
 		{

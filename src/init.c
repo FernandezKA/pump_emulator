@@ -22,7 +22,7 @@ void _gpio_init(void)
   gpio_init(GPIOA, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_10); // signal response
   gpio_init(GPIOB, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_0);  // inverted state for input caapture signal
   gpio_init(GPIOB, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_1);   // PWM_12, TIM3_CH3
-  gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_0);   // PWM_OUT, PA0
+	gpio_init(GPIOA, GPIO_MODE_AF_PP, GPIO_OSPEED_50MHZ, GPIO_PIN_0);   // PWM_OUT, PA0
   gpio_init(GPIOA, GPIO_MODE_IPD, GPIO_OSPEED_50MHZ, GPIO_PIN_8); //REQUEST INPUT CAPTURE
 
   gpio_init(GPIOA, GPIO_MODE_AIN, GPIO_OSPEED_50MHZ, GPIO_PIN_2); // ADC0_CH2
@@ -60,90 +60,31 @@ void _tim0_init(void)
   TIMER_CTL0(TIMER0) |= TIMER_CTL0_CEN;
 }
 
-// Used for generation pwm_11 && pwm_12 signal
+// Used for generation pwm_11
 void _tim1_init(void)
 {
-  rcu_periph_clock_enable(RCU_AF);
-  static timer_oc_parameter_struct timer_ocintpara;
-  static timer_parameter_struct timer_initpara;
-  timer_deinit(TIMER1);
-
-  /* TIMER1 configuration */
-  timer_initpara.prescaler = 1079;
-  timer_initpara.alignedmode = TIMER_COUNTER_EDGE;
-  timer_initpara.counterdirection = TIMER_COUNTER_UP;
-  timer_initpara.period = 999;
-  timer_initpara.clockdivision = TIMER_CKDIV_DIV1;
-  timer_initpara.repetitioncounter = 0;
-  timer_init(TIMER1, &timer_initpara);
-
-  /* CH1,CH2 and CH3 configuration in PWM mode1 */
-  timer_ocintpara.ocpolarity = TIMER_OC_POLARITY_HIGH;
-  timer_ocintpara.outputstate = TIMER_CCX_ENABLE;
-  timer_ocintpara.ocnpolarity = TIMER_OCN_POLARITY_HIGH;
-  timer_ocintpara.outputnstate = TIMER_CCXN_DISABLE;
-  timer_ocintpara.ocidlestate = TIMER_OC_IDLE_STATE_LOW;
-  timer_ocintpara.ocnidlestate = TIMER_OCN_IDLE_STATE_LOW;
-
-  timer_channel_output_config(TIMER1, TIMER_CH_0, &timer_ocintpara);
-
-  /* CH0 configuration in PWM mode1,duty cycle 75% */
-  timer_channel_output_pulse_value_config(TIMER1, TIMER_CH_0, 300);
-  timer_channel_output_mode_config(TIMER1, TIMER_CH_0, TIMER_OC_MODE_PWM0);
-  timer_channel_output_shadow_config(TIMER1, TIMER_CH_0, TIMER_OC_SHADOW_DISABLE);
-
-  /* auto-reload preload enable */
-  //timer_auto_reload_shadow_enable(TIMER1);
-  /* auto-reload preload enable */
-  timer_enable(TIMER1);
-  //disable_pwm(pwm_1);
-  //disable_pwm(pwm_2);
+	TIMER_PSC(TIMER1) = 1079;
+	TIMER_CAR(TIMER1) = 1000;
+	TIMER_CTL0(TIMER1) |= TIMER_CTL0_ARSE;//SHADOW ENABLE
+	TIMER_CHCTL0(TIMER1) |= (1<<6|1<<5);//ENABLE PWM MODE 0
+	TIMER_CH0CV(TIMER1) = 100; //DEFAULT 10% PWM FILLING
+	TIMER_CHCTL2(TIMER1) |= TIMER_CHCTL2_CH0EN;
+	TIMER_CTL0(TIMER1) |= TIMER_CTL0_CEN;
 }
-
+//PWM12 GENERATION
 void _tim2_init(void)
 {
 
-  rcu_periph_clock_enable(RCU_AF);
-  static timer_oc_parameter_struct timer_ocintpara;
-  static timer_parameter_struct timer_initpara;
-
-  timer_deinit(TIMER2);
-
-  /* TIMER1 configuration */
-  timer_initpara.prescaler = 1079;
-  timer_initpara.alignedmode = TIMER_COUNTER_EDGE;
-  timer_initpara.counterdirection = TIMER_COUNTER_UP;
-  timer_initpara.period = 999;
-  timer_initpara.clockdivision = TIMER_CKDIV_DIV1;
-  timer_initpara.repetitioncounter = 0;
-  timer_init(TIMER2, &timer_initpara);
-
-  /* CH1,CH2 and CH3 configuration in PWM mode1 */
-  timer_ocintpara.ocpolarity = TIMER_OC_POLARITY_HIGH;
-  timer_ocintpara.outputstate = TIMER_CCX_ENABLE;
-  timer_ocintpara.ocnpolarity = TIMER_OCN_POLARITY_HIGH;
-  timer_ocintpara.outputnstate = TIMER_CCXN_DISABLE;
-  timer_ocintpara.ocidlestate = TIMER_OC_IDLE_STATE_LOW;
-  timer_ocintpara.ocnidlestate = TIMER_OCN_IDLE_STATE_LOW;
-
-  //  timer_channel_output_config(TIMER2, TIMER_CH_2, &timer_ocintpara);
-  timer_channel_output_config(TIMER2, TIMER_CH_3, &timer_ocintpara);
-
-  /* CH3 configuration in PWM mode1,duty cycle 75% */
-  timer_channel_output_pulse_value_config(TIMER2, TIMER_CH_3, 599);
-  timer_channel_output_mode_config(TIMER2, TIMER_CH_3, TIMER_OC_MODE_PWM0);
-  timer_channel_output_shadow_config(TIMER2, TIMER_CH_3, TIMER_OC_SHADOW_DISABLE);
-
-  /* auto-reload preload enable */
-  timer_auto_reload_shadow_enable(TIMER2);
-  /* auto-reload preload enable */
-  timer_enable(TIMER2);
+	TIMER_PSC(TIMER2) = 1079;
+	TIMER_CAR(TIMER2) = 1000;
+	TIMER_CTL0(TIMER2) |= TIMER_CTL0_ARSE;//SHADOW ENABLE
+	TIMER_CHCTL1(TIMER2) |= (1<<14|1<<13);//ENABLE PWM MODE 0
+	TIMER_CH3CV(TIMER2) = 100; //DEFAULT 10% PWM FILLING
+	TIMER_CH2CV(TIMER2) = 100; //DEFAULT 10% PWM FILLING
+	TIMER_CHCTL2(TIMER2) |= TIMER_CHCTL2_CH3EN;
+	TIMER_CTL0(TIMER2) |= TIMER_CTL0_CEN;
 }
 
-void _tim3_init(void)
-{
-  __NOP();
-}
 
 void _adc_init(void)
 {
