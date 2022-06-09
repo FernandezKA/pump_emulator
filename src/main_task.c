@@ -143,18 +143,18 @@ void main_task(void *pvParameters)
 
 			else // Request stop detect
 			{
-				if (_tmp_pulse.state)
+				if (!_tmp_pulse.state)
 				{
 					if (_tmp_pulse.time > stop_seq && _tmp_pulse.time < stop_seq + max_dev_stop)
 					{
 						//This case not depend on valid_index, because pwm action handled here
-						get_clear_pwm_measure(&PWM);
-						get_pwm_error_action();
 						if (NULL != response_task_handle)
 						{
 							vTaskSuspend(response_task_handle);
 							start_req = false;
 						}
+						get_clear_pwm_measure(&PWM);
+						get_pwm_error_action();
 						GPIO_OCTL(RESPONSE_PORT) &= ~RESPONSE_PIN; // RESET PIN TO LOW STATE
 						_valid_index = 0x00U;
 					}
