@@ -13,6 +13,7 @@ void _spi_start(uint8_t dev)
   }
   //Reset clk 
   GPIO_OCTL(SPI_PORT) &= ~SPI_SCK;
+	for(uint8_t i = 0; i < 0xFF; ++i) {__NOP();}
 }
 void _spi_stop(uint8_t dev)
 {
@@ -33,8 +34,11 @@ void _spi_sendbyte(unsigned char d)
   for (i = 0; i < 2; i++)
   {
     GPIO_OCTL(SPI_PORT) &= ~SPI_SDI;
+		for(uint8_t i = 0; i < 0xFF; ++i) {__NOP();}
     GPIO_OCTL(SPI_PORT) |= SPI_SCK;
+		for(uint8_t i = 0; i < 0xFF; ++i) {__NOP();}
     GPIO_OCTL(SPI_PORT) &= ~SPI_SCK;
+		for(uint8_t i = 0; i < 0xFF; ++i) {__NOP();}
   }
   for (i = 0; i < 8; i++)
   {
@@ -47,14 +51,17 @@ void _spi_sendbyte(unsigned char d)
     {
       GPIO_OCTL(SPI_PORT) &= ~SPI_SDI;
     }
+		for(uint8_t i = 0; i < 0xFF; ++i) {__NOP();}
 		//Reset clk signal 
     GPIO_OCTL(SPI_PORT) |= SPI_SCK;
     //Shift value for next using
     d <<= 1;  
     //Lath value at rising edge clk
+		for(uint8_t i = 0; i < 0xFF; ++i) {__NOP();}
     GPIO_OCTL(SPI_PORT) &= ~SPI_SCK;
     //Delay can be removed
     for(uint8_t i = 0; i < 0xFF; ++i) {__NOP();}
+		GPIO_OCTL(SPI_PORT) &= ~SPI_SDI;
   }
 }
 void _AD8400_set(unsigned char voltage_step, uint8_t dev)

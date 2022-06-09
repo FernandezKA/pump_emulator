@@ -46,13 +46,13 @@ void pwm_def_task(void *pvParameters)
 {
 	for (;;)
 	{
-		set_pwm(pwm_2, 50U);
+		set_pwm(pwm_1, 50U);
 		vTaskDelay(pdMS_TO_TICKS(10000));
-		set_pwm(pwm_2, 45U);
+		set_pwm(pwm_1, 45U);
 		vTaskDelay(pdMS_TO_TICKS(10000));
-		set_pwm(pwm_2, 55U);
+		set_pwm(pwm_1, 55U);
 		vTaskDelay(pdMS_TO_TICKS(10000));
-		set_pwm(pwm_2, 45U);
+		set_pwm(pwm_1, 45U);
 		vTaskDelay(pdMS_TO_TICKS(10000));
 	}
 }
