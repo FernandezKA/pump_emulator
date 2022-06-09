@@ -34,7 +34,8 @@ uint16_t adc_get_result(void)
 // Software used function
 uint16_t u16ADC_Get_Mean(adc_simple *xADC)
 {
-	static uint32_t _sum = 0x00U;
+	static volatile uint32_t _sum;
+	_sum = 0x00U;
 	for (uint8_t i = 0; i < 0x0A; ++i)
 	{
 		_sum += xADC->adc_val[i];
@@ -89,10 +90,11 @@ void vShiftInit(shift_reg *xReg)
 
 uint8_t u8GetConversionValue(uint16_t _adc)
 {
-	static float _result = 0;
+	static float _result = 0, voltage = 0;
 	static uint16_t adc;
+	voltage = adc/77;
 	adc = _adc & 0x3FFU;
-	_result = 0.28 * adc * adc + 3.66 * adc + 37.49;
+	_result = 0.28 * voltage * voltage + 3.66 * voltage + 37.49;
 	return _result;
 }
 

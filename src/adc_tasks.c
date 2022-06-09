@@ -15,7 +15,7 @@ void ad8400_0_task(void *pvParameters)
 	static uint16_t mean_adc;
 	static uint32_t sum_adc = 0x00U;
 	static uint8_t counter_adc = 0x00U;
-	static uint16_t _u16Mean = 0x00U;
+	static volatile uint16_t _u16Mean = 0x00U;
 	adc_select_channel(0x02U);
 	vShiftInit(&reg);
 	vSimpleADC_Init(&_adc);
@@ -32,13 +32,14 @@ void ad8400_0_task(void *pvParameters)
 				vAddSample(&_adc, _u16Measure);
 				if (_adc.countSample == 0x0B)
 				{ // Get 1 sec. measure
+					_u16Mean = 0x00U;
 					_u16Mean = u16ADC_Get_Mean(&_adc);
 					// Detect bus state
-					if (_u16Mean < 620U)
+					if (_u16Mean < 39U)
 					{
 						_eStateADC = error;
 					}
-					else if (_u16Mean > 3350U)
+					else if (_u16Mean > 208U)
 					{
 						_eStateADC = error;
 					}
