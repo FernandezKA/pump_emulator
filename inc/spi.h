@@ -5,7 +5,7 @@
 #define SPI_PORT GPIOA
 #define SPI_NSS_PORT GPIOB
 #define SPI_SCK (1 << 5)
-#define SPI_NSS_0 (1 << 2)
+#define SPI_NSS_0 (1 << 12)
 #define SPI_NSS_1 (1 << 10)
 #define SPI_SDI (1 << 7)
 

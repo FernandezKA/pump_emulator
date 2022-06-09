@@ -56,6 +56,9 @@ void uart_info_task(void *pvParameters)
 		}
 		taskYIELD();
 		vSendByte('\n');
+		taskYIELD();
+		print("Conversion result\n\r:");
+		print_digit(conversion_result);
 		vTaskDelay(pdMS_TO_TICKS(1000U)); // Check info buffer every second
 	}
 }

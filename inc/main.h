@@ -59,7 +59,7 @@ extern uint8_t measured_pwm;
 extern struct therm_res therm_int; 
 
 extern bool isCapture;
-
+extern uint8_t conversion_result;
 
 void get_blink(void);
 #endif

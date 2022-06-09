@@ -17,6 +17,7 @@ uint8_t measured_pwm = 0x00U;
 //User struct for periph 
 struct pwm PWM;
 struct therm_res therm_int; 
+uint8_t conversion_result;
 int main()
  {
 	SysInit();
