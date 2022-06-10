@@ -34,7 +34,7 @@ void uart_info_task(void *pvParameters)
 		taskYIELD();
 		print("Temperature from the thermistor: \n\r");
 		taskYIELD();
-		print_digit(therm_int.temp);
+		print_temp(therm_int.temp);
 		taskYIELD();
 		// print_digit(global_adc_1);
 		print("Device state: \n\r");
@@ -85,6 +85,28 @@ void print_float(float val)
 	third_digit = (_digit % 10) + '0';
 	vSendByte(first_digit);
 	vSendByte('.');
+	vSendByte(second_digit);
+	vSendByte(third_digit);
+	vSendByte('\n');
+	vSendByte('\r');
+}
+
+void print_temp(uint8_t _tmp){
+	char first_digit, second_digit, third_digit;
+	signed int tmp_sgn = 0;
+	tmp_sgn = _tmp - 20;
+	if(tmp_sgn < 0){
+			first_digit = '-';
+			//first_digit = (abs(tmp_sgn) / 100) + '0';
+			second_digit = (abs(tmp_sgn) / 10) % 10 + '0';
+			third_digit = (abs(tmp_sgn) % 10) + '0';
+	}
+	else{
+			first_digit = (tmp_sgn / 100) + '0';
+			second_digit = (tmp_sgn / 10) % 10 + '0';
+			third_digit = (tmp_sgn % 10) + '0';
+	}
+	vSendByte(first_digit);
 	vSendByte(second_digit);
 	vSendByte(third_digit);
 	vSendByte('\n');

@@ -1,6 +1,6 @@
 #include "adc.h"
 
-float therm_res[] = {2.94, 2.34, 1.87, 1.51, 1.22, 1, 0.82, 0.68, 0.56, 0.47, 0.39, 0.33, 0.28, 0.23, 0.20}; //with step at 5 deg. 
+float therm_res[] = {7.91, 6.10, 4.74, 3.71, 2.94, 2.34, 1.87, 1.51, 1.22, 1, 0.82, 0.68, 0.56, 0.47, 0.39, 0.33, 0.28, 0.23, 0.20}; //with step at 5 deg. 
 
 void adc_select_channel(uint8_t ch_num)
 {

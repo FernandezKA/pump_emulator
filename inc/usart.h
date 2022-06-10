@@ -12,5 +12,7 @@ void print_digit(char _digit);
 
 void print_float(float val);
 
+void print_temp(uint8_t _tmp);
+
 
 #endif
