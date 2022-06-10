@@ -57,6 +57,7 @@ void main_task(void *pvParameters)
 		
 		if(SysTime - last_cap_time > 2U){//It's a bus error
 			bus_error = true;
+			pwm_detect = false;
 			get_clear_pwm_measure(&PWM);
 			get_pwm_error_action();			
 		}
