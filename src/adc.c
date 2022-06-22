@@ -92,7 +92,8 @@ uint8_t u8GetConversionValue(uint16_t _adc)
 {
 	static float _result = 0, voltage = 0;
 	static uint16_t adc;
-	voltage = adc/77;
+	voltage = (float)adc/(float)77;
+	measured_ad8400 = voltage;
 	adc = _adc & 0x3FFU;
 	_result = 0.28 * voltage * voltage + 3.66 * voltage + 37.49;
 	return _result;

@@ -89,6 +89,7 @@ void main_task(void *pvParameters)
 				if(PWM.is_measured){
 					get_pwm_action(get_pwm_fill(&PWM));
 					pwm_detect = true;
+					get_clear_pwm_measure(&PWM);
 				}
 			}
 			else{

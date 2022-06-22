@@ -38,6 +38,8 @@ void uart_info_task(void *pvParameters)
 		get_temp_int_conversion(&therm_int);
 		print("*************************************\n\r");
 		taskYIELD();
+		print_0("Measured voltage from AD8400: ");
+		print_float(measured_ad8400);		
 		print_0("Temperature from the thermistor: ");
 		//taskYIELD();
 		print_temp(therm_int.temp);
@@ -63,7 +65,7 @@ void uart_info_task(void *pvParameters)
 		taskYIELD();
 		//vSendByte('\n');
 		taskYIELD();
-		print_0("Conversion result: ");
+		print_0("Value for AD8400 after measure: ");
 		print_digit(conversion_result);
 		vTaskDelay(pdMS_TO_TICKS(1000U)); // Check info buffer every second
 	}

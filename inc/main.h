@@ -60,6 +60,7 @@ extern struct therm_res therm_int;
 
 extern bool isCapture;
 extern uint8_t conversion_result;
+extern float measured_ad8400; 
 
 void get_blink(void);
 #endif

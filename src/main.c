@@ -18,6 +18,7 @@ uint8_t measured_pwm = 0x00U;
 struct pwm PWM;
 struct therm_res therm_int; 
 uint8_t conversion_result;
+float measured_ad8400 = 0x00U;
 int main()
  {
 	SysInit();
