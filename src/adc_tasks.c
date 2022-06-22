@@ -57,7 +57,7 @@ void ad8400_0_task(void *pvParameters)
 				{													   // 10 samples is received
 					_u8NewConversion = u8GetConversionValue(mean_adc); // TODO: this used fixedd value for test, after add value from ADC
 					conversion_result = u8Shift_Value(&reg, _u8NewConversion);
-					_AD8400_set(conversion_result, 0);
+					_AD8400_set(conversion_result, 1);
 				}
 				else
 				{			 // Wait new sample
@@ -89,7 +89,7 @@ void ad8400_1_task(void *pvParameters)
 	for (;;)
 	{
 		if(res_value > 40){
-			_AD8400_set(res_value--, 1); //U4
+			_AD8400_set(res_value--, 0); //U4
 		}
 		vTaskDelay(pdMS_TO_TICKS(1000));
 	}

@@ -23,22 +23,28 @@ void print(char *pMsg)
 	}
 }
 
+void print_0(char *pMsg){
+	uint8_t index = 0; 
+	while(pMsg[index] != '\0'){
+		vSendByte(pMsg[index++]);
+	}
+}
+
 void uart_info_task(void *pvParameters)
 {
 	static uint8_t u8Rec_Buff;
 	for (;;)
 	{
 		get_temp_int_conversion(&therm_int);
-
 		print("*************************************\n\r");
 		taskYIELD();
-		print("Temperature from the thermistor: \n\r");
-		taskYIELD();
+		print_0("Temperature from the thermistor: ");
+		//taskYIELD();
 		print_temp(therm_int.temp);
 		taskYIELD();
 		// print_digit(global_adc_1);
-		print("Device state: \n\r");
-		taskYIELD();
+		print_0("Device state: ");
+		//taskYIELD();
 		if (bus_error)
 		{
 			print("Bus error detected\n\r");
@@ -46,7 +52,7 @@ void uart_info_task(void *pvParameters)
 		taskYIELD();
 		if (pwm_detect)
 		{
-			print("PWM signal detected, with filling: \n\r");
+			print_0("PWM signal detected, with filling: ");
 			print_digit(get_pwm_fill(&PWM));
 		}
 		taskYIELD();
@@ -55,9 +61,9 @@ void uart_info_task(void *pvParameters)
 			print("Respond sequence generation enable\n\r");
 		}
 		taskYIELD();
-		vSendByte('\n');
+		//vSendByte('\n');
 		taskYIELD();
-		print("Conversion result\n\r:");
+		print_0("Conversion result: ");
 		print_digit(conversion_result);
 		vTaskDelay(pdMS_TO_TICKS(1000U)); // Check info buffer every second
 	}

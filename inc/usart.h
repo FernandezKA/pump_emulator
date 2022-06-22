@@ -8,6 +8,8 @@ void vSendByte(char Byte);
 
 void print(char *pMsg);
 
+void print_0(char *pMsg);
+
 void print_digit(char _digit);
 
 void print_float(float val);
