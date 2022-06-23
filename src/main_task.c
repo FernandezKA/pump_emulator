@@ -29,13 +29,18 @@ void main_task(void *pvParameters)
 	pwm_detect = false;
 	get_pwm_error_action();
 	get_clear_pwm_measure(&PWM);
-	
-	print("Ver. 2.2, 2022-05-20\n\r");
+	for(uint8_t i = 0 ; i < 4; ++i){
+		GPIO_OCTL(SPI_NSS_PORT) ^= SPI_NSS_0;
+		GPIO_OCTL(SPI_NSS_PORT) ^= SPI_NSS_1;
+	}
+	_AD8400_set(39U, 0x01U);
+	_AD8400_set(0xFFU, 0x00U);
+	print("Ver. 2.2, 2022-06-23\n\r");
 	/*************************************************************************************************
 	 * ***********************************************************************************************
 	 * ***********************************************************************************************/
 	for (;;)
-	{
+	{   
 		//Get bus error led indication 
 		(bus_error) ? (GPIO_OCTL(LED_ERROR_PORT) |= ERROR_LED):(GPIO_OCTL(LED_ERROR_PORT) &= ~ERROR_LED);	
 		//Get pwm measure

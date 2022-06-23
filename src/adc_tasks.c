@@ -38,10 +38,12 @@ void ad8400_0_task(void *pvParameters)
 					if (_u16Mean < 39U)
 					{
 						_eStateADC = error;
+						_AD8400_set(39U, 0x01U);
 					}
 					else if (_u16Mean > 208U)
 					{
 						_eStateADC = error;
+						_AD8400_set(49U, 0x01U);
 					}
 					else
 					{
@@ -88,6 +90,8 @@ void ad8400_1_task(void *pvParameters)
 	uint8_t res_value = 250U;
 	for (;;)
 	{
+//		_AD8400_set(res_value--, 0); //U4
+//		_AD8400_set(res_value, 1); //U4
 		if(res_value > 40){
 			_AD8400_set(res_value--, 0); //U4
 		}

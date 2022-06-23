@@ -36,20 +36,20 @@ void uart_info_task(void *pvParameters)
 	for (;;)
 	{
 		get_temp_int_conversion(&therm_int);
-		print("*************************************\n\r");
+		print_0("\n\r*************************************\n\r");
 		taskYIELD();
-		print_0("Measured voltage from AD8400: ");
+		print_0("\n\rMeasured voltage from PA2: ");
 		print_float(measured_ad8400);		
-		print_0("Temperature from the thermistor: ");
+		print_0("\n\rTemperature from the thermistor: ");
 		//taskYIELD();
 		print_temp(therm_int.temp);
 		taskYIELD();
 		// print_digit(global_adc_1);
-		print_0("Device state: ");
+		print_0("\n\rDevice state: ");
 		//taskYIELD();
 		if (bus_error)
 		{
-			print("Bus error detected\n\r");
+			print_0("Bus error detected");
 		}
 		taskYIELD();
 		if (pwm_detect)
@@ -60,12 +60,12 @@ void uart_info_task(void *pvParameters)
 		taskYIELD();
 		if (start_req)
 		{
-			print("Respond sequence generation enable\n\r");
+			print_0("Respond sequence generation enable");
 		}
 		taskYIELD();
 		//vSendByte('\n');
 		taskYIELD();
-		print_0("Value for AD8400 after measure: ");
+		print_0("\n\rValue for AD8400 after measure: ");
 		print_digit(conversion_result);
 		vTaskDelay(pdMS_TO_TICKS(1000U)); // Check info buffer every second
 	}
@@ -80,8 +80,6 @@ void print_digit(char _digit)
 	vSendByte(first_digit);
 	vSendByte(second_digit);
 	vSendByte(third_digit);
-	vSendByte('\n');
-	vSendByte('\r');
 }
 
 void print_float(float val)
@@ -95,8 +93,6 @@ void print_float(float val)
 	vSendByte('.');
 	vSendByte(second_digit);
 	vSendByte(third_digit);
-	vSendByte('\n');
-	vSendByte('\r');
 }
 
 void print_temp(uint8_t _tmp){
@@ -117,6 +113,4 @@ void print_temp(uint8_t _tmp){
 	vSendByte(first_digit);
 	vSendByte(second_digit);
 	vSendByte(third_digit);
-	vSendByte('\n');
-	vSendByte('\r');
 }
