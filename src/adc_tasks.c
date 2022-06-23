@@ -90,8 +90,6 @@ void ad8400_1_task(void *pvParameters)
 	uint8_t res_value = 250U;
 	for (;;)
 	{
-//		_AD8400_set(res_value--, 0); //U4
-//		_AD8400_set(res_value, 1); //U4
 		if(res_value > 40){
 			_AD8400_set(res_value--, 0); //U4
 		}
