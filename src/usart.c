@@ -38,11 +38,15 @@ void uart_info_task(void *pvParameters)
 		get_temp_int_conversion(&therm_int);
 		print_0("\n\r*************************************\n\r");
 		taskYIELD();
+		print_0("\n\rTemperature from the thermistor: ");
+		print_temp(therm_int.temp);
+
 		print_0("\n\rMeasured voltage from PA2: ");
 		print_float(measured_ad8400);		
-		print_0("\n\rTemperature from the thermistor: ");
-		//taskYIELD();
-		print_temp(therm_int.temp);
+		print_0("\n\rValue for AD8400 after measure: ");
+		print_digit(conversion_result);
+		print_0("\n\rValue for AD8400 dec.: ");
+		print_digit(inc_val_ad8400);
 		taskYIELD();
 		// print_digit(global_adc_1);
 		print_0("\n\rDevice state: ");
@@ -60,13 +64,11 @@ void uart_info_task(void *pvParameters)
 		taskYIELD();
 		if (start_req)
 		{
-			print_0("Respond sequence generation enable");
+			print_0("\n\rRespond sequence generation enable");
 		}
 		taskYIELD();
 		//vSendByte('\n');
 		taskYIELD();
-		print_0("\n\rValue for AD8400 after measure: ");
-		print_digit(conversion_result);
 		vTaskDelay(pdMS_TO_TICKS(1000U)); // Check info buffer every second
 	}
 }

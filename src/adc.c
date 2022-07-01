@@ -112,10 +112,13 @@ bool bGetMeanValue(uint32_t *_sum, uint16_t *_mean, uint8_t *_counter, uint16_t 
 	{
 		*_sum += _adc_val;
 		++*_counter;
+		_status = false;
 	}
 	else
 	{
 		*_mean = (uint16_t)(*_sum / MEAN_NUMS);
+		*_sum = 0x00U;
+		*_counter = 0x00U;
 		_status = true;
 	}
 	return _status;

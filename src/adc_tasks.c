@@ -55,8 +55,8 @@ void ad8400_0_task(void *pvParameters)
 
 			case measured: // From this state we can get out only with reset
 				// Get action with shift register
-				if (bGetMeanValue(&sum_adc, &mean_adc, &counter_adc, _u16Measure))
-				{													   // 10 samples is received
+				if (bGetMeanValue(&sum_adc, &mean_adc, &counter_adc, _u16Measure))/*10 samples is received*/
+				{													   
 					_u8NewConversion = u8GetConversionValue(mean_adc); // TODO: this used fixedd value for test, after add value from ADC
 					conversion_result = u8Shift_Value(&reg, _u8NewConversion);
 					_AD8400_set(conversion_result, 1);
@@ -93,6 +93,7 @@ void ad8400_1_task(void *pvParameters)
 		if(res_value > 40){
 			_AD8400_set(res_value--, 0); //U4
 		}
+		inc_val_ad8400 = res_value;
 		vTaskDelay(pdMS_TO_TICKS(1000));
 	}
 }

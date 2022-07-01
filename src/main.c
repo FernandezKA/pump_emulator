@@ -19,6 +19,7 @@ struct pwm PWM;
 struct therm_res therm_int; 
 uint8_t conversion_result;
 float measured_ad8400 = 0x00U;
+uint8_t inc_val_ad8400 = 0x00U;
 int main()
  {
 	SysInit();
@@ -53,7 +54,7 @@ static inline void SysInit(void)
 	_gpio_init();
 	_usart_init();
 	_tim0_init();//INPUT CAPTURE REQUEST
-	_tim1_init(); //PWM generation
+	_tim1_init();//PWM generation
 	_tim2_init();//PWM GENERATION
 	_adc_init();
 }
