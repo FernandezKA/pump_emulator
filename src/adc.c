@@ -72,12 +72,13 @@ uint8_t u8Shift_Value(shift_reg *xShift, uint8_t _value)
 	}
 	else
 	{
-		for (uint8_t i = 1; i <= 120U; ++i)
+		for (uint8_t i = 1; i < 120U; ++i)
 		{
-			xShift->_val[i] = xShift->_val[i - 1];
+			xShift->_val[i - 1] = xShift->_val[i];
 		}
-		xShift->_val[0U] = _value;
-		return xShift->_val[119U];
+		xShift->_val[119U] = _value;
+		xShift->_isFirst = false;
+		return xShift->_val[0U];
 	}
 }
 

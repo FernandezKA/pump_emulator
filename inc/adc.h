@@ -2,7 +2,7 @@
 #define _adc_h_
 #include "main.h"
 
-#define MEAN_NUMS 0x0AU
+#define MEAN_NUMS ((uint8_t) 0x0AU)
 
 //Structure for adc8400
 enum _adc_state{

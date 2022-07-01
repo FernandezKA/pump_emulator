@@ -42,7 +42,12 @@ void uart_info_task(void *pvParameters)
 		print_temp(therm_int.temp);
 
 		print_0("\n\rMeasured voltage from PA2: ");
-		print_float(measured_ad8400);		
+		if(measured_ad8400 == 0){
+			print_0("voltage out of range");
+		}
+		else{
+			print_float(measured_ad8400);		
+		}
 		print_0("\n\rValue for AD8400 after measure: ");
 		print_digit(conversion_result);
 		print_0("\n\rValue for AD8400 dec.: ");
@@ -87,7 +92,7 @@ void print_digit(char _digit)
 void print_float(float val)
 {
 	char first_digit, second_digit, third_digit;
-	uint8_t _digit = (uint8_t)(val * (float)100);
+	uint16_t _digit = (uint16_t)(val * (float)100);
 	first_digit = (_digit / 100) + '0';
 	second_digit = (_digit / 10) % 10 + '0';
 	third_digit = (_digit % 10) + '0';

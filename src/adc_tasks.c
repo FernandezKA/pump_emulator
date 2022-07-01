@@ -5,7 +5,7 @@ void ad8400_0_task(void *pvParameters)
 {
 #define sample_time 10U
 	uint8_t res_value = 0x00U;
-	static shift_reg reg; // shift register for delay buffer
+	shift_reg reg; // shift register for delay buffer
 	static adc_simple _adc;
 	static adc_state _eStateADC = not_measured;
 	static uint16_t _u16Measure = 0x00U;
@@ -38,11 +38,13 @@ void ad8400_0_task(void *pvParameters)
 					if (_u16Mean < 39U)
 					{
 						_eStateADC = error;
+						conversion_result = 39U;
 						_AD8400_set(39U, 0x01U);
 					}
 					else if (_u16Mean > 208U)
 					{
 						_eStateADC = error;
+						conversion_result = 49U;
 						_AD8400_set(49U, 0x01U);
 					}
 					else
@@ -59,6 +61,7 @@ void ad8400_0_task(void *pvParameters)
 				{													   
 					_u8NewConversion = u8GetConversionValue(mean_adc); // TODO: this used fixedd value for test, after add value from ADC
 					conversion_result = u8Shift_Value(&reg, _u8NewConversion);
+					reg._isFirst = false;
 					_AD8400_set(conversion_result, 1);
 				}
 				else
@@ -70,7 +73,7 @@ void ad8400_0_task(void *pvParameters)
 
 			case error:
 				// Reset flags of state
-				conversion_result = 0x00U;
+				//conversion_result = 0x00U;
 				_eStateADC = not_measured;
 				vSimpleADC_Init(&_adc);			  // Reset all of parameters into measured simplest ADC
 				vTaskDelay(pdMS_TO_TICKS(1000U)); // Wait 1 sec. for new measure, then repeat again
