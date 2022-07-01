@@ -12,7 +12,7 @@ void ad8400_0_task(void *pvParameters)
 	static uint8_t _u8NewConversion = 0x00U;
 
 	//LPF filter for measure
-	static uint16_t mean_adc;
+	uint16_t mean_adc;
 	static uint32_t sum_adc = 0x00U;
 	static uint8_t counter_adc = 0x00U;
 	static volatile uint16_t _u16Mean = 0x00U;
