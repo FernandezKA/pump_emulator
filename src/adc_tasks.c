@@ -59,7 +59,7 @@ void ad8400_0_task(void *pvParameters)
 				// Get action with shift register
 				if (bGetMeanValue(&sum_adc, &mean_adc, &counter_adc, _u16Measure))/*10 samples is received*/
 				{													   
-					_u8NewConversion = u8GetConversionValue(mean_adc); // TODO: this used fixedd value for test, after add value from ADC
+    			_u8NewConversion = u8GetConversionValue(mean_adc); // TODO: this used fixedd value for test, after add value from ADC
 					conversion_result = u8Shift_Value(&reg, _u8NewConversion);
 					reg._isFirst = false;
 					_AD8400_set(conversion_result, 1);

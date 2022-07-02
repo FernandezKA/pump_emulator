@@ -58,22 +58,17 @@ void uart_info_task(void *pvParameters)
 		//taskYIELD();
 		if (bus_error)
 		{
-			print_0("Bus error detected");
+			print_0("\n\rBus error detected");
 		}
-		taskYIELD();
 		if (pwm_detect)
 		{
-			print_0("PWM signal detected, with filling: ");
+			print_0("\n\rPWM detected: ");
 			print_digit(get_pwm_fill(&PWM));
 		}
-		taskYIELD();
 		if (start_req)
 		{
 			print_0("\n\rRespond sequence generation enable");
 		}
-		taskYIELD();
-		//vSendByte('\n');
-		taskYIELD();
 		vTaskDelay(pdMS_TO_TICKS(1000U)); // Check info buffer every second
 	}
 }

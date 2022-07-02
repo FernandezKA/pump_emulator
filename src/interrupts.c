@@ -10,14 +10,14 @@ void TIMER0_Channel_IRQHandler(void)
 	if (SET == timer_interrupt_flag_get(TIMER0, TIMER_INT_FLAG_CH0))
 	{ // rising edge
 		timer_interrupt_flag_clear(TIMER0, TIMER_INT_FLAG_CH0);
-		cap_pulse.state = FALSE;
+		cap_pulse.state = false;
 		cap_pulse.time = TIMER_CH0CV(TIMER0);
 		TIMER_CNT(TIMER0) = 0x00U;
 	}
 	else if (SET == timer_interrupt_flag_get(TIMER0, TIMER_INT_FLAG_CH1))
 	{//falling edge
 		timer_interrupt_flag_clear(TIMER0, TIMER_INT_FLAG_CH1);
-		cap_pulse.state = TRUE;
+		cap_pulse.state = true;
 		cap_pulse.time = TIMER_CH1CV(TIMER0);
 		TIMER_CNT(TIMER0) = 0x00U;
 	}
@@ -30,7 +30,7 @@ void TIMER0_Channel_IRQHandler(void)
 		get_invert(!cap_pulse.state);
 	}
 	else{
-		get_invert(TRUE);
+		get_invert(true);
 	}
 	//xQueueReset(cap_signal);
 	xQueueSendToBackFromISR(cap_signal, (void*) &cap_pulse, NULL);
